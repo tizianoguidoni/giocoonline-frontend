@@ -6,10 +6,11 @@ function CharacterPreview({ currentWeaponId }) {
   const mountRef = useRef(null);
 
   useEffect(() => {
-    if (!mountRef.current) return;
+    const currentRef = mountRef.current;
+    if (!currentRef) return;
     
-    const w = mountRef.current.clientWidth;
-    const h = mountRef.current.clientHeight;
+    const w = currentRef.clientWidth;
+    const h = currentRef.clientHeight;
     const scene = new THREE.Scene();
     
     // Ark style background color
@@ -20,7 +21,7 @@ function CharacterPreview({ currentWeaponId }) {
     
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(w, h);
-    mountRef.current.appendChild(renderer.domElement);
+    currentRef.appendChild(renderer.domElement);
     
     // Lights
     const ambLight = new THREE.AmbientLight(0xffffff, 0.4);
@@ -73,8 +74,8 @@ function CharacterPreview({ currentWeaponId }) {
     animate();
 
     const handleResize = () => {
-      renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
-      camera.aspect = mountRef.current.clientWidth / mountRef.current.clientHeight;
+      renderer.setSize(currentRef.clientWidth, currentRef.clientHeight);
+      camera.aspect = currentRef.clientWidth / currentRef.clientHeight;
       camera.updateProjectionMatrix();
     };
     window.addEventListener('resize', handleResize);
@@ -82,7 +83,7 @@ function CharacterPreview({ currentWeaponId }) {
     return () => {
       cancelAnimationFrame(frameId);
       window.removeEventListener('resize', handleResize);
-      if (mountRef.current) mountRef.current.removeChild(renderer.domElement);
+      if (currentRef) currentRef.removeChild(renderer.domElement);
       renderer.dispose();
       scene.clear();
     };
