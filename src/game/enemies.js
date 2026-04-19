@@ -7,24 +7,11 @@ import { assetManager } from './AssetManager';
 
 const STATE = { IDLE: 'idle', PATROL: 'patrol', CHASE: 'chase', ATTACK: 'attack', DEAD: 'dead' };
 
-function buildEnemyMesh({ color = 0x8a1020, scale = 1, eyeColor = 0xff3030, isBoss = false }) {
+function buildEnemyMesh({ type = 'grunt', scale = 1, isBoss = false }) {
   const group = new THREE.Group();
 
-  const bodyMat = new THREE.MeshStandardMaterial({
-    color,
-    roughness: 0.7,
-    metalness: 0.15,
-    emissive: color,
-    emissiveIntensity: 0.12,
-  });
-  const darkMat = new THREE.MeshStandardMaterial({
-    color: 0x0a0608,
-    roughness: 0.9,
-    metalness: 0.1,
-  });
-
   if (isBoss) {
-    // ---- Ark Style Obelisk Boss Design ----
+    // ---- Arena Boss Layout (Crystal Construct) ----
     const crystalMat = new THREE.MeshStandardMaterial({
       color: 0x00d0ff, roughness: 0.1, metalness: 0.9, emissive: 0x0080ff, emissiveIntensity: 0.5
     });
@@ -32,72 +19,115 @@ function buildEnemyMesh({ color = 0x8a1020, scale = 1, eyeColor = 0xff3030, isBo
       color: 0x050a10, roughness: 0.2, metalness: 0.8, emissive: 0x003366, emissiveIntensity: 0.2
     });
     
-    // Obelisco centrale (ottagono allungato)
     const torso = new THREE.Mesh(new THREE.OctahedronGeometry(0.8 * scale, 0), darkCrystalMat);
     torso.scale.set(1, 2.2, 1);
     torso.position.y = 1.3 * scale;
     group.add(torso);
 
-    // Nucleo energetico interno
     const core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.4 * scale, 0), crystalMat);
     core.position.y = 1.3 * scale;
     group.add(core);
     group.userData.core = core;
 
-    // Occhi (sensori laser)
-    const eyeMat = new THREE.MeshBasicMaterial({ color: eyeColor });
-    const eyeL = new THREE.Mesh(new THREE.BoxGeometry(0.1 * scale, 0.1 * scale, 0.1 * scale), eyeMat);
-    const eyeR = eyeL.clone();
-    eyeL.position.set(-0.35 * scale, 2.0 * scale, 0.45 * scale);
-    eyeR.position.set(0.35 * scale, 2.0 * scale, 0.45 * scale);
-    group.add(eyeL, eyeR);
-
-    // Parti fluttuanti (no braccia/gambe classiche)
-    const armL = new THREE.Group();
-    const armR = new THREE.Group();
-    const legL = new THREE.Group();
-    const legR = new THREE.Group();
-    
-    return { group, eyeL, eyeR, armL, armR, legL, legR };
+    return { group };
   }
 
-  // ---- Design standard (Grunt) ----
-  // torso (tall elongated)
-  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.32 * scale, 0.9 * scale, 4, 8), bodyMat);
-  torso.position.y = 1.0 * scale;
+  // ---- Standard Enemy Variants ----
+  if (type === 'spider') {
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3, metalness: 0.8 });
+    const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    
+    // Thorax
+    const thorax = new THREE.Mesh(new THREE.SphereGeometry(0.3 * scale, 8, 8), bodyMat);
+    thorax.position.y = 0.2 * scale;
+    thorax.scale.set(1, 0.8, 1.2);
+    group.add(thorax);
+
+    // Abdomen
+    const abdomen = new THREE.Mesh(new THREE.SphereGeometry(0.45 * scale, 8, 8), bodyMat);
+    abdomen.position.set(0, 0.35 * scale, -0.6 * scale);
+    group.add(abdomen);
+
+    // Eyes
+    const e1 = new THREE.Mesh(new THREE.SphereGeometry(0.04 * scale, 4, 4), eyeMat);
+    const e2 = e1.clone();
+    e1.position.set(0.12 * scale, 0.35 * scale, 0.25 * scale);
+    e2.position.set(-0.12 * scale, 0.35 * scale, 0.25 * scale);
+    group.add(e1, e2);
+
+    // Legs
+    const legs = new THREE.Group();
+    const legGeo = new THREE.CapsuleGeometry(0.03 * scale, 0.7 * scale, 4, 4);
+    for (let i = 0; i < 8; i++) {
+        const leg = new THREE.Mesh(legGeo, bodyMat);
+        const angle = (i < 4 ? i : i + 1) * (Math.PI / 6) - (Math.PI / 2);
+        const side = i < 4 ? 1 : -1;
+        leg.position.set(0.3 * side * scale, 0.2 * scale, (i % 4) * 0.2 * scale - 0.3 * scale);
+        leg.rotation.z = Math.PI / 3 * side;
+        legs.add(leg);
+    }
+    group.add(legs);
+    group.userData.legs = legs;
+    return { group };
+  }
+
+  if (type === 'orc') {
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0x2d4c1e, roughness: 0.8 }); // Dark Green
+    const armorMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.7, roughness: 0.3 });
+    
+    // Bulky Torso
+    const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.45 * scale, 0.8 * scale, 4, 6), skinMat);
+    torso.position.y = 1.0 * scale;
+    group.add(torso);
+
+    // Shoulder pads
+    const padGeo = new THREE.SphereGeometry(0.25 * scale, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+    const lPad = new THREE.Mesh(padGeo, armorMat);
+    const rPad = lPad.clone();
+    lPad.position.set(-0.5 * scale, 1.4 * scale, 0);
+    rPad.position.set(0.5 * scale, 1.4 * scale, 0);
+    group.add(lPad, rPad);
+
+    // Head
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.25 * scale, 8, 8), skinMat);
+    head.position.y = 1.7 * scale;
+    group.add(head);
+
+    return { group };
+  }
+
+  if (type === 'goblin') {
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0x56a32d, roughness: 0.6 }); // Bright Green
+    
+    // Skinny Torso
+    const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.22 * scale, 0.6 * scale, 4, 6), skinMat);
+    torso.position.y = 0.6 * scale;
+    group.add(torso);
+
+    // Large Head
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.2 * scale, 8, 8), skinMat);
+    head.position.y = 1.1 * scale;
+    group.add(head);
+
+    // Ears
+    const earGeo = new THREE.ConeGeometry(0.08 * scale, 0.25 * scale, 4);
+    const lEar = new THREE.Mesh(earGeo, skinMat);
+    const rEar = lEar.clone();
+    lEar.position.set(-0.25 * scale, 1.15 * scale, 0);
+    lEar.rotation.z = Math.PI / 2.5;
+    rEar.position.set(0.25 * scale, 1.15 * scale, 0);
+    rEar.rotation.z = -Math.PI / 2.5;
+    group.add(lEar, rEar);
+
+    return { group };
+  }
+
+  // Fallback (Grunt)
+  const fallbackMat = new THREE.MeshStandardMaterial({ color: 0x8a1020 });
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.3 * scale, 0.8 * scale), fallbackMat);
+  torso.position.y = 0.8 * scale;
   group.add(torso);
-
-  // head
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.22 * scale, 10, 8), darkMat);
-  head.position.y = 1.75 * scale;
-  group.add(head);
-
-  // eyes (emissive)
-  const eyeMat = new THREE.MeshBasicMaterial({ color: eyeColor });
-  const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.045 * scale, 6, 6), eyeMat);
-  const eyeR = eyeL.clone();
-  eyeL.position.set(-0.08 * scale, 1.78 * scale, 0.18 * scale);
-  eyeR.position.set(0.08 * scale, 1.78 * scale, 0.18 * scale);
-  group.add(eyeL, eyeR);
-
-  // arms (thin)
-  const armGeo = new THREE.CapsuleGeometry(0.1 * scale, 0.8 * scale, 4, 6);
-  const armL = new THREE.Mesh(armGeo, bodyMat);
-  const armR = armL.clone();
-  armL.position.set(-0.42 * scale, 1.05 * scale, 0);
-  armR.position.set(0.42 * scale, 1.05 * scale, 0);
-  group.add(armL, armR);
-
-  // legs
-  const legGeo = new THREE.CapsuleGeometry(0.13 * scale, 0.7 * scale, 4, 6);
-  const legL = new THREE.Mesh(legGeo, darkMat);
-  const legR = legL.clone();
-  legL.position.set(-0.16 * scale, 0.38 * scale, 0);
-  legR.position.set(0.16 * scale, 0.38 * scale, 0);
-  group.add(legL, legR);
-
-  // point light "aura" (very subtle, only on bosses)
-  return { group, eyeL, eyeR, armL, armR, legL, legR };
+  return { group };
 }
 
 export class Enemy {
@@ -137,20 +167,20 @@ export class Enemy {
       armL = new THREE.Group(); armR = new THREE.Group();
       legL = new THREE.Group(); legR = new THREE.Group();
     } else {
-      const color = skin ? skin.color : (type === 'stalker' ? 0x6a2a7a : 0x8a1020);
-      const eyeColor = skin ? skin.eye : 0xff3030;
-      this.displayName = skin ? skin.name : 'Nemico';
-      const meshData = buildEnemyMesh({ color, scale, eyeColor, isBoss: false });
+      const types = ['orc', 'goblin', 'spider'];
+      const chosenType = skin ? skin.type : types[Math.floor(Math.random() * 3)];
+      const meshData = buildEnemyMesh({ type: chosenType, scale, isBoss: false });
       group = meshData.group;
-      eyeL = meshData.eyeL; eyeR = meshData.eyeR;
-      armL = meshData.armL; armR = meshData.armR;
-      legL = meshData.legL; legR = meshData.legR;
+      this.enemyType = chosenType;
     }
 
     this.mesh = group;
-    this.eyeL = eyeL; this.eyeR = eyeR;
-    this.armL = armL; this.armR = armR;
-    this.legL = legL; this.legR = legR;
+    this.eyeL = eyeL || null; 
+    this.eyeR = eyeR || null;
+    this.armL = armL || null; 
+    this.armR = armR || null;
+    this.legL = legL || null; 
+    this.legR = legR || null;
     this.mesh.position.copy(spawnPos);
     scene.add(this.mesh);
 
@@ -277,8 +307,10 @@ export class Enemy {
 
     // flash eyes when hit
     const flashK = this.flashTime > 0 ? 1 + this.flashTime * 8 : 1;
-    if (this.eyeL.material) {
+    if (this.eyeL && this.eyeL.material) {
         this.eyeL.material.color.setRGB(1 * flashK, 0.2, 0.2);
+    }
+    if (this.eyeR && this.eyeR.material) {
         this.eyeR.material.color.setRGB(1 * flashK, 0.2, 0.2);
     }
 
@@ -302,7 +334,7 @@ export class Enemy {
           // animation: arm swing or FBX attack
           if (this.clips && this.clips.attack) {
             this.clips.attack.reset().play();
-          } else {
+          } else if (this.armL && this.armR) {
             this.armL.rotation.x = -1.2; this.armR.rotation.x = -1.2;
           }
           if (onPlayerHit) onPlayerHit(this.damage, this);
@@ -321,26 +353,20 @@ export class Enemy {
     // Animation updates
     if (this.mixer) this.mixer.update(dt);
 
-    if (this.isBoss && !this.mixer) {
-      const t = this.walkTime * 2;
-      this.mesh.position.y = this.homePos.y + 0.5 + Math.sin(t) * 0.3;
-      this.mesh.rotation.y += dt * 0.5;
-    } 
-
-    if (this.clips) {
-       const isMoving = this.state === STATE.CHASE || this.state === STATE.PATROL;
-       if (isMoving && this.clips.run) {
-           if (this.clips.idle && this.clips.idle.isRunning()) this.clips.idle.fadeOut(0.2);
-           if (!this.clips.run.isRunning()) this.clips.run.reset().fadeIn(0.2).play();
-       } else if (!isMoving && this.clips.idle) {
-           if (this.clips.run && this.clips.run.isRunning()) this.clips.run.fadeOut(0.2);
-           if (!this.clips.idle.isRunning()) this.clips.idle.reset().fadeIn(0.2).play();
-       }
-    }
-
     // boss aura pulse
     if (this.aura) {
       this.aura.intensity = 1.2 + Math.sin(this.walkTime * 3) * 0.6;
+    }
+
+    // Spider leg animation
+    if (this.enemyType === 'spider' && this.mesh.userData.legs) {
+        const isMoving = this.state === STATE.CHASE || this.state === STATE.PATROL;
+        if (isMoving) {
+            this.mesh.userData.legs.children.forEach((leg, i) => {
+                const phase = (i % 4) * Math.PI / 2;
+                leg.rotation.x = Math.sin(this.walkTime * 12 + phase) * 0.4;
+            });
+        }
     }
   }
 
