@@ -72,6 +72,7 @@ export default function AdminPanel() {
   const isSuperAdmin = user?.role === 'super_admin';
   const isAnyAdmin = user?.role === 'super_admin' || user?.role === 'co_admin';
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (isAnyAdmin) {
       fetchData();

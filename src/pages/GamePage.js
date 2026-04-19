@@ -122,6 +122,7 @@ export default function GamePage() {
   }, [chatMessages]);
 
   // Combat timer
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (inCombat && turnTimer > 0) {
       const timer = setTimeout(() => setTurnTimer(t => t - 1), 1000);
