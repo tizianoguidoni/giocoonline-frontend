@@ -162,20 +162,26 @@ export function buildViewmodelFor(weaponId) {
     case 'runebow': return buildBowViewmodel();
     case 'magestaff': return buildStaffViewmodel();
     case 'soulblade': {
+      const group = new THREE.Group();
       const model = assetManager.getSwordModel() || buildSwordViewmodel(0xff4060);
       model.rotation.set(0, -Math.PI/2, 0.45);
-      model.scale.setScalar(0.012);
-      return model;
+      model.scale.setScalar(0.0015);
+      model.position.set(0, 0.2, 0); // aggiusta altezza nel gruppo
+      group.add(model);
+      return group;
     }
     default: {
+      const group = new THREE.Group();
       const model = assetManager.getSwordModel() || buildSwordViewmodel(0xd0e0ff);
       model.rotation.set(0, -Math.PI/2, 0.45);
-      model.scale.setScalar(0.012);
-      return model;
+      model.scale.setScalar(0.0015);
+      model.position.set(0, 0.2, 0); // aggiusta altezza nel gruppo
+      group.add(model);
+      return group;
     }
-
   }
 }
+
 
 export class WeaponSystem {
   constructor(scene, camera) {
@@ -191,7 +197,7 @@ export class WeaponSystem {
     this.swingT = 0;
 
     this.viewmodelHolder = new THREE.Group();
-    this.viewmodelHolder.position.set(0.32, -0.3, -0.5);
+    this.viewmodelHolder.position.set(0.4, -0.4, -0.5);
     this.viewmodelHolder.rotation.y = -0.25;
     this.camera.add(this.viewmodelHolder);
     this._rebuildViewmodel();

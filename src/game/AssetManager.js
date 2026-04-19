@@ -111,14 +111,14 @@ export class AssetManager {
   getSwordModel() {
     if (!this.models.sword) return null;
     const model = this.models.sword.clone();
-    model.scale.set(0.01, 0.01, 0.01); // Common scaling for FBX
+    model.scale.set(0.001, 0.001, 0.001); // Significant reduction to avoid screen blocking
     return model;
   }
 
   getCharacterModel() {
      if (!this.models.character) return null;
      const model = this.models.character.clone();
-     model.scale.set(0.01, 0.01, 0.01);
+     model.scale.set(0.001, 0.001, 0.001);
      return model;
   }
 }

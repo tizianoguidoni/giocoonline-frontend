@@ -6,6 +6,7 @@ const API = process.env.REACT_APP_BACKEND_URL ? `${process.env.REACT_APP_BACKEND
 export function AuthUI({ onAuthSuccess }) {
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -16,12 +17,13 @@ export function AuthUI({ onAuthSuccess }) {
     setLoading(true);
 
     const endpoint = isLogin ? '/auth/login' : '/auth/register';
+    const payload = isLogin ? { username, password } : { username, email, password };
     try {
-      const response = await axios.post(`${API}${endpoint}`, { username, password });
+      const response = await axios.post(`${API}${endpoint}`, payload);
       if (response.data.ok) {
         localStorage.setItem('ark-token', response.data.token);
         localStorage.setItem('lab3d-nick', response.data.username);
-        onAuthSuccess(response.data.username);
+        onAuthSuccess(response.data);
       } else {
         setError(response.data.error || 'Errore durante l\'autenticazione');
       }
@@ -79,6 +81,23 @@ export function AuthUI({ onAuthSuccess }) {
               onBlur={(e) => e.target.style.borderColor = `${themeColor}33`}
             />
           </div>
+
+          {!isLogin && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <label style={{ fontSize: 11, letterSpacing: 1 }}>EMAIL (OPZIONALE PER AMMINISTRATORI)</label>
+              <input 
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={{
+                  background: 'rgba(255,255,255,0.05)', border: `1px solid ${themeColor}33`,
+                  padding: '12px 15px', color: '#fff', outline: 'none', transition: '0.3s'
+                }}
+                onFocus={(e) => e.target.style.borderColor = themeColor}
+                onBlur={(e) => e.target.style.borderColor = `${themeColor}33`}
+              />
+            </div>
+          )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <label style={{ fontSize: 11, letterSpacing: 1 }}>PASSWORD DI SICUREZZA</label>

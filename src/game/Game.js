@@ -35,24 +35,24 @@ export class Game {
     this.renderer.shadowMap.enabled = false;
 
     this.scene = new THREE.Scene();
-    this.scene.fog = new THREE.Fog(0x0a0608, 2, 14);
+    this.scene.fog = new THREE.Fog(0x0a0608, 3, 18);
 
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.05, 200);
     this.camera.position.set(0, PLAYER_HEIGHT, 0);
     this.scene.add(this.camera);
 
     // lights
-    this.ambient = new THREE.AmbientLight(0x202028, 0.4);
+    this.ambient = new THREE.AmbientLight(0x202028, 0.8);
     this.scene.add(this.ambient);
 
     // Torch (follows camera)
-    this.torch = new THREE.SpotLight(0xffc888, 2.8, 16, Math.PI / 5, 0.55, 1.4);
+    this.torch = new THREE.SpotLight(0xffc888, 3.2, 22, Math.PI / 4.5, 0.55, 1.2);
     this.torch.castShadow = false;
     this.torch.position.set(0, 0, 0);
     this.torch.target.position.set(0, 0, -1);
     this.camera.add(this.torch);
     this.camera.add(this.torch.target);
-    this.torchBaseIntensity = 2.8;
+    this.torchBaseIntensity = 3.2;
 
     // Secondary warm glow (body light)
     this.bodyLight = new THREE.PointLight(0xff9a5a, 0.35, 3);
@@ -688,6 +688,30 @@ export class Game {
     this.player.pocketMoney += a;
     this._updateUI();
     return { ok: true, amount: a };
+  }
+
+  // --- CHEATS (OWNER ONLY) ---
+  cheatGiveMoney(amount) {
+    this.player.pocketMoney += amount;
+    this.player.bankMoney += amount;
+    this.audio && this.audio.sfxPickup();
+    this.onEvent({ type: 'toast', text: `✨ CHEAT: +${amount}€` });
+    this._updateUI();
+  }
+
+  cheatUnlockAll() {
+    Object.keys(WEAPONS).forEach(id => {
+      this.weapons.ownWeapon(id);
+    });
+    this.onEvent({ type: 'toast', text: `⚔ CHEAT: Tutte le armi sbloccate` });
+    this._updateUI();
+  }
+
+  cheatHeal() {
+    this.player.hp = this.player.maxHp;
+    if (this.spells) this.spells.restoreMana(100);
+    this.onEvent({ type: 'toast', text: `❤ CHEAT: Salute e Mana ripristinati` });
+    this._updateUI();
   }
 
   getState() {
