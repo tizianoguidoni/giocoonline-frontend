@@ -2,6 +2,7 @@
 // Unified system: all use raycast for damage (melee = short range cone, ranged = precise).
 
 import * as THREE from 'three';
+import { assetManager } from './AssetManager';
 
 export const WEAPONS = {
   shortsword: {
@@ -160,8 +161,19 @@ export function buildViewmodelFor(weaponId) {
     case 'warhammer': return buildHammerViewmodel();
     case 'runebow': return buildBowViewmodel();
     case 'magestaff': return buildStaffViewmodel();
-    case 'soulblade': return buildSwordViewmodel(0xff4060);
-    default: return buildSwordViewmodel(0xd0e0ff);
+    case 'soulblade': {
+      const model = assetManager.getSwordModel() || buildSwordViewmodel(0xff4060);
+      model.rotation.set(0, -Math.PI/2, 0.45);
+      model.scale.setScalar(0.012);
+      return model;
+    }
+    default: {
+      const model = assetManager.getSwordModel() || buildSwordViewmodel(0xd0e0ff);
+      model.rotation.set(0, -Math.PI/2, 0.45);
+      model.scale.setScalar(0.012);
+      return model;
+    }
+
   }
 }
 

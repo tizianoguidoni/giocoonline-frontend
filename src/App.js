@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Game } from './game/Game';
 import { InventoryUI } from './components/InventoryUI';
 import { AuthUI } from './components/AuthUI';
+import { assetManager } from './game/AssetManager';
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 function MiniMap({ game }) {
@@ -280,6 +281,7 @@ export default function App() {
   const [scores, setScores] = useState([]);
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem('ark-token'));
+  const [isAssetsLoaded, setIsAssetsLoaded] = useState(false);
   const submittedRef = useRef(false);
 
   const fetchScores = useCallback(async () => {
@@ -365,10 +367,10 @@ export default function App() {
   }, [started, end, merchantCatalog]);
 
   useEffect(() => {
-    if (isLoggedIn && !started) {
-       // Auto-start or wait for user to click a simplified "START" button
+    if (isLoggedIn && !isAssetsLoaded) {
+       assetManager.loadAll().then(() => setIsAssetsLoaded(true));
     }
-  }, [isLoggedIn, started]);
+  }, [isLoggedIn, isAssetsLoaded]);
 
   useEffect(() => {
     return () => { if (gameRef.current) gameRef.current.stop(); };
@@ -405,7 +407,20 @@ export default function App() {
         />
       )}
       {!isLoggedIn && <AuthUI onAuthSuccess={(nick) => { setNickname(nick); setIsLoggedIn(true); }} />}
-      {isLoggedIn && !started && <StartOverlay onStart={startGame} scores={scores} nickname={nickname} setNickname={setNickname} />}
+      {isLoggedIn && !isAssetsLoaded && (
+        <div style={{
+          position: 'fixed', inset: 0, background: '#050a0f', zIndex: 2000,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          color: '#50c8e8', fontFamily: 'sans-serif', letterSpacing: 4
+        }}>
+           <div style={{ fontSize: 24, marginBottom: 20 }}>INIZIALIZZAZIONE DATI ARK...</div>
+           <div style={{ width: 300, height: 4, background: 'rgba(80, 200, 232, 0.2)', position: 'relative' }}>
+             <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', background: '#50c8e8', width: '60%', transition: 'width 0.5s', boxShadow: '0 0 15px #50c8e8' }} />
+           </div>
+           <p style={{ fontSize: 10, marginTop: 15, opacity: 0.6 }}>CARICAMENTO MODELLI 3D E VARIANTI ELEMENTALI</p>
+        </div>
+      )}
+      {isLoggedIn && isAssetsLoaded && !started && <StartOverlay onStart={startGame} scores={scores} nickname={nickname} setNickname={setNickname} />}
       {end && <EndOverlay type={end} state={state} nickname={nickname} onRestart={startGame} scores={scores} />}
       <div data-testid="toast-container" style={{ position: 'fixed', top: 100, left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', gap: 6, pointerEvents: 'none', zIndex: 50 }}>
         {toasts.map(t => (

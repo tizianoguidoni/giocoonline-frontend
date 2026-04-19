@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { WEAPONS, buildViewmodelFor } from '../game/weapons';
+import { assetManager } from '../game/AssetManager';
+
 
 function CharacterPreview({ currentWeaponId }) {
   const mountRef = useRef(null);
@@ -33,41 +35,78 @@ function CharacterPreview({ currentWeaponId }) {
     // Character Group
     const charGroup = new THREE.Group();
     scene.add(charGroup);
-
-    // Basic human-like character
-    const skinMat = new THREE.MeshStandardMaterial({ color: 0xe0ac69, roughness: 0.6 });
-    const clothesMat = new THREE.MeshStandardMaterial({ color: 0x5a554a, roughness: 0.9 });
-    const pantsMat = new THREE.MeshStandardMaterial({ color: 0x3d3830, roughness: 0.9 });
-
-    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.25), clothesMat);
-    torso.position.y = 1.05;
-    const head = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, 0.25), skinMat);
-    head.position.y = 1.6;
-    const legL = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.8, 0.2), pantsMat);
-    legL.position.set(-0.14, 0.4, 0);
-    const legR = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.8, 0.2), pantsMat);
-    legR.position.set(0.14, 0.4, 0);
     
-    const armL = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.65, 0.15), skinMat);
-    armL.position.set(-0.35, 1.05, 0);
-    const armR = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.65, 0.15), skinMat);
-    // Right arm posed holding weapon
-    armR.position.set(0.45, 1.05, 0.2);
-    armR.rotation.x = -Math.PI / 2.5;
+    // --- Enhanced Character & Weapon Loader ---
+    let charModel, mixer, sword;
 
-    charGroup.add(torso, head, legL, legR, armL, armR);
+    if (assetManager.isLoaded) {
+      charModel = assetManager.getCharacterModel();
+      // Setup Mixer
+      if (charModel.animations && charModel.animations.length > 0) {
+        mixer = new THREE.AnimationMixer(charModel);
+        const idleClip = charModel.animations.find(c => c.name.toLowerCase().includes('idle'));
+        if (idleClip) mixer.clipAction(idleClip).play();
+      }
+      
+      // Add sword in hand if equipped
+      if (currentWeaponId && (currentWeaponId === 'shortsword' || currentWeaponId === 'soulblade')) {
+        sword = assetManager.getSwordModel();
+        sword.scale.setScalar(0.015);
+        // Find hand bone or just attach to a pivot
+        const rHand = charModel.getObjectByName('RightHand') || charModel.getObjectByName('hand_r');
+        if (rHand) {
+            rHand.add(sword);
+            sword.rotation.set(Math.PI/2, 0, 0);
+        } else {
+            charModel.add(sword);
+            sword.position.set(0.4, 1.1, 0.2);
+        }
+      } else if (currentWeaponId) {
+        const fallBackWeapon = buildViewmodelFor(currentWeaponId);
+        fallBackWeapon.scale.setScalar(0.5);
+        fallBackWeapon.position.set(0.4, 0.8, 0.5);
+        charModel.add(fallBackWeapon);
+      }
+      charGroup.add(charModel);
+    } else {
+      // Basic human-like character
+      const skinMat = new THREE.MeshStandardMaterial({ color: 0xe0ac69, roughness: 0.6 });
+      const clothesMat = new THREE.MeshStandardMaterial({ color: 0x5a554a, roughness: 0.9 });
+      const pantsMat = new THREE.MeshStandardMaterial({ color: 0x3d3830, roughness: 0.9 });
 
-    // Add weapon
-    if (currentWeaponId) {
-      const weaponModel = buildViewmodelFor(currentWeaponId);
-      weaponModel.position.set(0.45, 1.05 - 0.25, 0.5);
-      weaponModel.rotation.set(0, Math.PI, 0);
-      charGroup.add(weaponModel);
+      const torso = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.25), clothesMat);
+      torso.position.y = 1.05;
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, 0.25), skinMat);
+      head.position.y = 1.6;
+      const legL = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.8, 0.2), pantsMat);
+      legL.position.set(-0.14, 0.4, 0);
+      const legR = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.8, 0.2), pantsMat);
+      legR.position.set(0.14, 0.4, 0);
+      
+      const armL = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.65, 0.15), skinMat);
+      armL.position.set(-0.35, 1.05, 0);
+      const armR = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.65, 0.15), skinMat);
+      // Right arm posed holding weapon
+      armR.position.set(0.45, 1.05, 0.2);
+      armR.rotation.x = -Math.PI / 2.5;
+
+      charGroup.add(torso, head, legL, legR, armL, armR);
+
+      // Add weapon
+      if (currentWeaponId) {
+        const weaponModel = buildViewmodelFor(currentWeaponId);
+        weaponModel.position.set(0.45, 1.05 - 0.25, 0.5);
+        weaponModel.rotation.set(0, Math.PI, 0);
+        charGroup.add(weaponModel);
+      }
     }
     
     let frameId;
+    const clock = new THREE.Clock();
     const animate = () => {
       frameId = requestAnimationFrame(animate);
+      const delta = clock.getDelta();
+      if (mixer) mixer.update(delta);
       renderer.render(scene, camera);
     };
     animate();

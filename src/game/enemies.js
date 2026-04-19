@@ -3,6 +3,7 @@
 
 import * as THREE from 'three';
 import { CELL_SIZE } from './maze';
+import { assetManager } from './AssetManager';
 
 const STATE = { IDLE: 'idle', PATROL: 'patrol', CHASE: 'chase', ATTACK: 'attack', DEAD: 'dead' };
 
@@ -104,12 +105,48 @@ export class Enemy {
     this.scene = scene;
     this.type = type;
     this.isBoss = type === 'boss';
-    const scale = this.isBoss ? 1.9 : 1.0;
+    const scale = this.isBoss ? 2.2 : 1.0;
 
-    const color = this.isBoss ? 0x00a0ff : (skin ? skin.color : (type === 'stalker' ? 0x6a2a7a : 0x8a1020));
-    const eyeColor = this.isBoss ? 0x00ffff : (skin ? skin.eye : 0xff3030);
-    this.displayName = this.isBoss ? 'Obelisco dei Primordi' : (skin ? skin.name : 'Nemico');
-    const { group, eyeL, eyeR, armL, armR, legL, legR } = buildEnemyMesh({ color, scale, eyeColor, isBoss: this.isBoss });
+    let group, eyeL, eyeR, armL, armR, legL, legR;
+    
+    if (this.isBoss && assetManager.isLoaded) {
+      // Pick a random element (0: Fire, 1: Ice, 2: Earth)
+      this.bossType = Math.floor(Math.random() * 3);
+      group = assetManager.getBossVariant(this.bossType);
+      
+      // If we have an FBX model, setup animations
+      if (group.animations && group.animations.length > 0) {
+        this.mixer = new THREE.AnimationMixer(group);
+        this.clips = {};
+        group.animations.forEach(clip => {
+            const name = clip.name.toLowerCase();
+            if (name.includes('idle')) this.clips.idle = this.mixer.clipAction(clip);
+            if (name.includes('run') || name.includes('walk')) this.clips.run = this.mixer.clipAction(clip);
+            if (name.includes('attack')) this.clips.attack = this.mixer.clipAction(clip);
+        });
+        // Default to idle
+        if (this.clips.idle) this.clips.idle.play();
+      }
+
+      const names = ['Ignis', 'Glacies', 'Terra'];
+      this.displayName = `Elementale del ${names[this.bossType]}`;
+      
+      // Placeholders for legacy code
+      eyeL = { material: { color: { setRGB: () => {} } } };
+      eyeR = { material: { color: { setRGB: () => {} } } };
+      armL = new THREE.Group(); armR = new THREE.Group();
+      legL = new THREE.Group(); legR = new THREE.Group();
+    } else {
+      const color = skin ? skin.color : (type === 'stalker' ? 0x6a2a7a : 0x8a1020);
+      const eyeColor = skin ? skin.eye : 0xff3030;
+      this.displayName = skin ? skin.name : 'Nemico';
+      const meshData = buildEnemyMesh({ color, scale, eyeColor, isBoss: false });
+      group = meshData.group;
+      eyeL = meshData.eyeL; eyeR = meshData.eyeR;
+      armL = meshData.armL; armR = meshData.armR;
+      legL = meshData.legL; legR = meshData.legR;
+    }
+
     this.mesh = group;
     this.eyeL = eyeL; this.eyeR = eyeR;
     this.armL = armL; this.armR = armR;
@@ -162,6 +199,10 @@ export class Enemy {
       this.die();
     } else {
       this.state = STATE.CHASE;
+      if (this.clips && this.clips.run && !this.clips.run.isRunning()) {
+        if (this.clips.idle) this.clips.idle.fadeOut(0.2);
+        this.clips.run.reset().fadeIn(0.2).play();
+      }
     }
   }
 
@@ -236,8 +277,10 @@ export class Enemy {
 
     // flash eyes when hit
     const flashK = this.flashTime > 0 ? 1 + this.flashTime * 8 : 1;
-    this.eyeL.material.color.setRGB(1 * flashK, 0.2, 0.2);
-    this.eyeR.material.color.setRGB(1 * flashK, 0.2, 0.2);
+    if (this.eyeL.material) {
+        this.eyeL.material.color.setRGB(1 * flashK, 0.2, 0.2);
+        this.eyeR.material.color.setRGB(1 * flashK, 0.2, 0.2);
+    }
 
     const dist = this.mesh.position.distanceTo(playerPos);
     const sees = this._canSee(playerPos, walls);
@@ -256,8 +299,12 @@ export class Enemy {
         // attack
         if (this.attackCooldown <= 0) {
           this.attackCooldown = this.attackInterval;
-          // animation: arm swing
-          this.armL.rotation.x = -1.2; this.armR.rotation.x = -1.2;
+          // animation: arm swing or FBX attack
+          if (this.clips && this.clips.attack) {
+            this.clips.attack.reset().play();
+          } else {
+            this.armL.rotation.x = -1.2; this.armR.rotation.x = -1.2;
+          }
           if (onPlayerHit) onPlayerHit(this.damage, this);
         }
       }
@@ -271,22 +318,24 @@ export class Enemy {
       if (!moved) this.patrolTarget = null;
     }
 
-    // Floating/Pulse animation
-    if (this.isBoss) {
+    // Animation updates
+    if (this.mixer) this.mixer.update(dt);
+
+    if (this.isBoss && !this.mixer) {
       const t = this.walkTime * 2;
       this.mesh.position.y = this.homePos.y + 0.5 + Math.sin(t) * 0.3;
       this.mesh.rotation.y += dt * 0.5;
-      if (this.mesh.userData.core) {
-        this.mesh.userData.core.rotation.x += dt * 2;
-        this.mesh.userData.core.rotation.z += dt * 1.5;
-        this.mesh.userData.core.material.emissiveIntensity = 0.5 + Math.sin(t * 2) * 0.3;
-      }
-    } else {
-      // Disabilitato camminata braccia/gambe come richiesto
-      this.legL.rotation.x = 0;
-      this.legR.rotation.x = 0;
-      this.armL.rotation.x = 0;
-      this.armR.rotation.x = 0;
+    } 
+
+    if (this.clips) {
+       const isMoving = this.state === STATE.CHASE || this.state === STATE.PATROL;
+       if (isMoving && this.clips.run) {
+           if (this.clips.idle && this.clips.idle.isRunning()) this.clips.idle.fadeOut(0.2);
+           if (!this.clips.run.isRunning()) this.clips.run.reset().fadeIn(0.2).play();
+       } else if (!isMoving && this.clips.idle) {
+           if (this.clips.run && this.clips.run.isRunning()) this.clips.run.fadeOut(0.2);
+           if (!this.clips.idle.isRunning()) this.clips.idle.reset().fadeIn(0.2).play();
+       }
     }
 
     // boss aura pulse
