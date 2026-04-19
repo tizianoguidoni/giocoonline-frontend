@@ -23,49 +23,40 @@ function buildEnemyMesh({ color = 0x8a1020, scale = 1, eyeColor = 0xff3030, isBo
   });
 
   if (isBoss) {
-    // ---- Nanon Banana Boss Design ----
-    const bananaMat = new THREE.MeshStandardMaterial({
-      color: 0xffd700, roughness: 0.5, metalness: 0.1, emissive: 0x403000, emissiveIntensity: 0.2
+    // ---- Ark Style Obelisk Boss Design ----
+    const crystalMat = new THREE.MeshStandardMaterial({
+      color: 0x00d0ff, roughness: 0.1, metalness: 0.9, emissive: 0x0080ff, emissiveIntensity: 0.5
     });
-    const brownMat = new THREE.MeshStandardMaterial({ color: 0x4a2a10, roughness: 0.9 });
+    const darkCrystalMat = new THREE.MeshStandardMaterial({ 
+      color: 0x050a10, roughness: 0.2, metalness: 0.8, emissive: 0x003366, emissiveIntensity: 0.2
+    });
     
-    // Corpo a banana gigante (tronco)
-    const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.5 * scale, 1.2 * scale, 8, 12), bananaMat);
+    // Obelisco centrale (ottagono allungato)
+    const torso = new THREE.Mesh(new THREE.OctahedronGeometry(0.8 * scale, 0), darkCrystalMat);
+    torso.scale.set(1, 2.2, 1);
     torso.position.y = 1.3 * scale;
-    // Piegatura simulata (tilt)
-    torso.rotation.z = -0.15;
     group.add(torso);
 
-    // Gambo sù
-    const stemTop = new THREE.Mesh(new THREE.ConeGeometry(0.15 * scale, 0.4 * scale, 6), brownMat);
-    stemTop.position.set(0.18 * scale, 2.3 * scale, 0);
-    stemTop.rotation.z = -0.4;
-    group.add(stemTop);
+    // Nucleo energetico interno
+    const core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.4 * scale, 0), crystalMat);
+    core.position.y = 1.3 * scale;
+    group.add(core);
+    group.userData.core = core;
 
-    // Occhi
+    // Occhi (sensori laser)
     const eyeMat = new THREE.MeshBasicMaterial({ color: eyeColor });
-    const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.06 * scale, 6, 6), eyeMat);
+    const eyeL = new THREE.Mesh(new THREE.BoxGeometry(0.1 * scale, 0.1 * scale, 0.1 * scale), eyeMat);
     const eyeR = eyeL.clone();
-    eyeL.position.set(-0.15 * scale, 1.8 * scale, 0.45 * scale);
-    eyeR.position.set(0.25 * scale, 1.8 * scale, 0.48 * scale);
+    eyeL.position.set(-0.35 * scale, 2.0 * scale, 0.45 * scale);
+    eyeR.position.set(0.35 * scale, 2.0 * scale, 0.45 * scale);
     group.add(eyeL, eyeR);
 
-    // Braccia muscolose
-    const armGeo = new THREE.CapsuleGeometry(0.15 * scale, 0.8 * scale, 6, 8);
-    const armL = new THREE.Mesh(armGeo, bananaMat);
-    const armR = armL.clone();
-    armL.position.set(-0.6 * scale, 1.3 * scale, 0);
-    armR.position.set(0.6 * scale, 1.3 * scale, 0);
-    group.add(armL, armR);
-
-    // Gambe
-    const legGeo = new THREE.CapsuleGeometry(0.18 * scale, 0.8 * scale, 6, 8);
-    const legL = new THREE.Mesh(legGeo, brownMat);
-    const legR = legL.clone();
-    legL.position.set(-0.25 * scale, 0.4 * scale, 0);
-    legR.position.set(0.25 * scale, 0.4 * scale, 0);
-    group.add(legL, legR);
-
+    // Parti fluttuanti (no braccia/gambe classiche)
+    const armL = new THREE.Group();
+    const armR = new THREE.Group();
+    const legL = new THREE.Group();
+    const legR = new THREE.Group();
+    
     return { group, eyeL, eyeR, armL, armR, legL, legR };
   }
 
@@ -115,9 +106,9 @@ export class Enemy {
     this.isBoss = type === 'boss';
     const scale = this.isBoss ? 1.9 : 1.0;
 
-    const color = this.isBoss ? 0xffd700 : (skin ? skin.color : (type === 'stalker' ? 0x6a2a7a : 0x8a1020));
-    const eyeColor = this.isBoss ? 0xff0000 : (skin ? skin.eye : 0xff3030);
-    this.displayName = this.isBoss ? 'Nanon Banana' : (skin ? skin.name : 'Nemico');
+    const color = this.isBoss ? 0x00a0ff : (skin ? skin.color : (type === 'stalker' ? 0x6a2a7a : 0x8a1020));
+    const eyeColor = this.isBoss ? 0x00ffff : (skin ? skin.eye : 0xff3030);
+    this.displayName = this.isBoss ? 'Obelisco dei Primordi' : (skin ? skin.name : 'Nemico');
     const { group, eyeL, eyeR, armL, armR, legL, legR } = buildEnemyMesh({ color, scale, eyeColor, isBoss: this.isBoss });
     this.mesh = group;
     this.eyeL = eyeL; this.eyeR = eyeR;
@@ -280,16 +271,22 @@ export class Enemy {
       if (!moved) this.patrolTarget = null;
     }
 
-    // Walk leg animation
-    const walking = this.state === STATE.CHASE || this.state === STATE.PATROL;
-    if (walking) {
-      const t = this.walkTime * 6;
-      this.legL.rotation.x = Math.sin(t) * 0.6;
-      this.legR.rotation.x = -Math.sin(t) * 0.6;
-      if (!(this.state === STATE.CHASE && dist <= this.attackRange)) {
-        this.armL.rotation.x = -Math.sin(t) * 0.5;
-        this.armR.rotation.x = Math.sin(t) * 0.5;
+    // Floating/Pulse animation
+    if (this.isBoss) {
+      const t = this.walkTime * 2;
+      this.mesh.position.y = this.homePos.y + 0.5 + Math.sin(t) * 0.3;
+      this.mesh.rotation.y += dt * 0.5;
+      if (this.mesh.userData.core) {
+        this.mesh.userData.core.rotation.x += dt * 2;
+        this.mesh.userData.core.rotation.z += dt * 1.5;
+        this.mesh.userData.core.material.emissiveIntensity = 0.5 + Math.sin(t * 2) * 0.3;
       }
+    } else {
+      // Disabilitato camminata braccia/gambe come richiesto
+      this.legL.rotation.x = 0;
+      this.legR.rotation.x = 0;
+      this.armL.rotation.x = 0;
+      this.armR.rotation.x = 0;
     }
 
     // boss aura pulse

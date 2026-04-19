@@ -68,7 +68,6 @@ function CharacterPreview({ currentWeaponId }) {
     let frameId;
     const animate = () => {
       frameId = requestAnimationFrame(animate);
-      charGroup.rotation.y += 0.005;
       renderer.render(scene, camera);
     };
     animate();

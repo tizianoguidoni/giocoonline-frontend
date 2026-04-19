@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import axios from 'axios';
 import { Game } from './game/Game';
 import { InventoryUI } from './components/InventoryUI';
+import { AuthUI } from './components/AuthUI';
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 function MiniMap({ game }) {
@@ -278,6 +279,7 @@ export default function App() {
   const [nickname, setNickname] = useState(() => localStorage.getItem('lab3d-nick') || '');
   const [scores, setScores] = useState([]);
   const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem('ark-token'));
   const submittedRef = useRef(false);
 
   const fetchScores = useCallback(async () => {
@@ -363,6 +365,12 @@ export default function App() {
   }, [started, end, merchantCatalog]);
 
   useEffect(() => {
+    if (isLoggedIn && !started) {
+       // Auto-start or wait for user to click a simplified "START" button
+    }
+  }, [isLoggedIn, started]);
+
+  useEffect(() => {
     return () => { if (gameRef.current) gameRef.current.stop(); };
   }, []);
 
@@ -396,7 +404,8 @@ export default function App() {
           }} 
         />
       )}
-      {!started && <StartOverlay onStart={startGame} scores={scores} nickname={nickname} setNickname={setNickname} />}
+      {!isLoggedIn && <AuthUI onAuthSuccess={(nick) => { setNickname(nick); setIsLoggedIn(true); }} />}
+      {isLoggedIn && !started && <StartOverlay onStart={startGame} scores={scores} nickname={nickname} setNickname={setNickname} />}
       {end && <EndOverlay type={end} state={state} nickname={nickname} onRestart={startGame} scores={scores} />}
       <div data-testid="toast-container" style={{ position: 'fixed', top: 100, left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', gap: 6, pointerEvents: 'none', zIndex: 50 }}>
         {toasts.map(t => (
