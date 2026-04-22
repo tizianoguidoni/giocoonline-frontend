@@ -766,4 +766,67 @@ export class Game {
       })),
     };
   }
+
+  // ─── ADMIN METHODS ───────────────────────────────────────────────────────────
+
+  /** Teleport the player to a world-space coordinate */
+  teleportTo(worldX, worldZ) {
+    this.camera.position.x = worldX;
+    this.camera.position.z = worldZ;
+    this.camera.position.y = 1.6;
+  }
+
+  /** Teleport to a maze cell (col, row) */
+  teleportToCell(cx, cy) {
+    const wp = { x: (cx - this.maze.width / 2) * CELL_SIZE, z: (cy - this.maze.height / 2) * CELL_SIZE };
+    this.teleportTo(wp.x, wp.z);
+  }
+
+  /** Give money to the player */
+  cheatGiveMoney(amount = 5000) {
+    this.player.pocketMoney += amount;
+    this.player.score += amount;
+    this._updateUI();
+  }
+
+  /** Fully heal the player */
+  cheatHeal() {
+    this.player.hp = this.player.maxHp;
+    this.player.mana = this.player.maxMana;
+    this._updateUI();
+  }
+
+  /** Toggle god mode (no damage) */
+  cheatGodMode() {
+    this._godMode = !this._godMode;
+    return this._godMode;
+  }
+
+  /** Kill all enemies in the maze */
+  cheatKillAll() {
+    for (const e of this.enemies) {
+      if (!e.dead) e.die();
+    }
+    this._updateUI();
+  }
+
+  /** Set player speed multiplier */
+  cheatSetSpeed(multiplier) {
+    this._speedMult = Math.max(0.1, Math.min(10, multiplier));
+  }
+
+  /** Get current player position as cell coords */
+  getPlayerCell() {
+    return {
+      cx: Math.floor(this.camera.position.x / CELL_SIZE + this.maze.width / 2),
+      cy: Math.floor(this.camera.position.z / CELL_SIZE + this.maze.height / 2),
+      worldX: this.camera.position.x,
+      worldZ: this.camera.position.z,
+    };
+  }
+
+  /** Get maze dimensions */
+  getMazeDimensions() {
+    return { width: this.maze.width, height: this.maze.height };
+  }
 }

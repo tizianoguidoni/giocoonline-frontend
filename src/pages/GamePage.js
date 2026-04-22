@@ -436,12 +436,7 @@ export default function GamePage() {
                   exit={{ opacity: 0 }}
                   className="h-full w-full relative"
                 >
-                  {isInMaze ? (
-                    <Maze3D onExit={() => {
-                        setIsInMaze(false);
-                        if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-                    }} />
-                  ) : (
+                  {!isInMaze && (
                     <div className="h-full flex flex-col items-center justify-center p-8 text-center">
                       <div className="max-w-2xl gold-framed-panel p-12 bg-black/60 backdrop-blur-md rounded-3xl shadow-[0_0_50px_rgba(212,175,55,0.15)]">
                         <motion.div 

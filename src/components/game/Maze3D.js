@@ -110,17 +110,37 @@ export default function Maze3D({ onExit }) {
     processRewards();
   }, [end, state, refreshCharacter]);
 
+  useEffect(() => {
+    const handleResize = () => {
+      if (gameRef.current) {
+        gameRef.current.renderer.setSize(window.innerWidth, window.innerHeight);
+        gameRef.current.camera.aspect = window.innerWidth / window.innerHeight;
+        gameRef.current.camera.updateProjectionMatrix();
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Pause game when modals are open
+  useEffect(() => {
+    if (gameRef.current) {
+      gameRef.current.setPaused(showExitConfirm || adminOpen);
+    }
+  }, [showExitConfirm, adminOpen]);
+
   if (!isAssetsLoaded) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center bg-black text-[#50c8e8]">
+      <div className="fixed inset-0 z-[2000] flex flex-col items-center justify-center bg-black text-[#50c8e8]">
          <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#50c8e8] border-t-transparent mb-4"></div>
-         <div>CARICAMENTO ASSET 3D...</div>
+         <div className="tracking-[0.2em] font-bold">CARICAMENTO LABIRINTO...</div>
       </div>
     );
   }
 
   return (
-    <div className="relative w-full h-full bg-black overflow-hidden" style={{ cursor: started && !end && !showExitConfirm && !adminOpen ? 'none' : 'default' }}>
+    <div className="fixed inset-0 bg-black z-[1000] overflow-hidden" 
+         style={{ cursor: started && !end && !showExitConfirm && !adminOpen ? 'none' : 'default' }}>
       <canvas ref={canvasRef} className="block w-full h-full" />
       
       {started && !end && (
@@ -131,7 +151,7 @@ export default function Maze3D({ onExit }) {
       )}
 
       {/* Back Button */}
-      {started && !end && !adminOpen && (
+      {started && !end && !adminOpen && !showExitConfirm && (
         <div className="absolute top-5 left-5 z-[100]">
           <button 
             onClick={() => {
@@ -147,14 +167,14 @@ export default function Maze3D({ onExit }) {
 
       {/* Exit Confirmation */}
       {showExitConfirm && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[1000] flex items-center justify-center">
-          <div className="bg-[#0a0a0f] border border-[#50c8e8] p-10 text-center text-white shadow-[0_0_30px_rgba(80,200,232,0.2)]">
-            <h2 className="text-[#ff4020] text-2xl font-bold mb-4 tracking-widest">ATTENZIONE</h2>
-            <p className="opacity-80 leading-relaxed max-w-md">
-              Se esci dal labirinto e torni alla Hub, <b>la partita si resetterà</b>.<br/>
-              L'oro e l'equipaggiamento rimangono salvati nel tuo inventario, non preoccuparti!
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-md z-[1000] flex items-center justify-center">
+          <div className="bg-[#0a0a0f] border border-[#ff4020] p-10 text-center text-white shadow-[0_0_50px_rgba(255,64,32,0.2)] max-w-lg">
+            <h2 className="text-[#ff4020] text-3xl font-bold mb-6 tracking-widest uppercase">Abbandonare la Sfida?</h2>
+            <p className="text-gray-400 leading-relaxed mb-8">
+              Pausa tattica. Se esci ora tornerai all'Hub principale. <br/>
+              <b>L'oro raccolto finora verrà salvato automaticamente.</b>
             </p>
-            <div className="flex gap-4 justify-center mt-8">
+            <div className="flex flex-col gap-4">
                <button 
                  onClick={async () => {
                    setShowExitConfirm(false); 
@@ -163,24 +183,24 @@ export default function Maze3D({ onExit }) {
                      try {
                         await axios.post(`${API}/combat/maze-win`, { gold: state.score });
                         refreshCharacter();
-                        toast.success(`Hai salvato ${state.score} monete tornando alla base.`);
+                        toast.success(`Hai salvato ${state.score} monete.`);
                      } catch(e) { }
                    }
                    if (gameRef.current) gameRef.current.stop(); 
                    onExit(); 
                  }} 
-                 className="px-6 py-3 bg-[#ff4020] text-white font-bold tracking-wider hover:bg-red-600"
+                 className="w-full py-4 bg-[#ff4020] hover:bg-red-600 text-white font-black tracking-[0.3em] transition-all transform hover:scale-[1.02]"
                >
-                 RITORNA ALL'HUB
+                 TORNA ALL'HUB
                </button>
                <button 
                  onClick={() => { 
                    setShowExitConfirm(false); 
                    setTimeout(() => gameRef.current && gameRef.current.requestPointerLock(), 150); 
                  }} 
-                 className="px-6 py-3 border border-[#50c8e8] text-[#50c8e8] tracking-wider hover:bg-[#50c8e8]/10"
+                 className="w-full py-4 border border-gray-700 hover:border-[#50c8e8] text-gray-400 hover:text-[#50c8e8] font-bold tracking-widest transition-all"
                >
-                 ANNULLA
+                 CONTINUA A COMBATTERE
                </button>
             </div>
           </div>
@@ -189,16 +209,16 @@ export default function Maze3D({ onExit }) {
 
       {/* End Screen */}
       {end && (
-        <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-[200]">
-           <div className={`text-6xl font-bold tracking-widest mb-4 ${end === 'win' ? 'text-green-500' : 'text-red-500'}`}>
-              {end === 'win' ? 'FUGA RIUSCITA' : 'SEI MORTO'}
+        <div className="absolute inset-0 bg-black/95 flex flex-col items-center justify-center z-[200] backdrop-blur-lg">
+           <div className={`text-7xl font-black tracking-[0.5em] mb-6 uppercase ${end === 'win' ? 'text-green-500 drop-shadow-[0_0_20px_#22c55e]' : 'text-red-600 drop-shadow-[0_0_20px_#dc2626]'}`}>
+              {end === 'win' ? 'VITTORIA' : 'SCONFITTA'}
            </div>
-           <div className="text-white opacity-80 text-lg mb-8">
-              Score: <span className="text-yellow-400 font-bold">{state?.score || 0}</span> | Tempo: {Math.floor(state?.time || 0)}s
+           <div className="text-white/60 text-xl mb-12 tracking-[0.2em]">
+              MONETE: <span className="text-yellow-400 font-bold">{state?.score || 0}</span> | TEMPO: {Math.floor(state?.time || 0)}s
            </div>
-           <div className="flex gap-4">
-             <button onClick={() => startGame()} className="px-6 py-3 border-2 border-yellow-500 text-yellow-500 hover:bg-yellow-500/10 tracking-widest">RIPROVA</button>
-             <button onClick={onExit} className="px-6 py-3 border-2 border-blue-500 text-blue-500 hover:bg-blue-500/10 tracking-widest">TORNA ALL'HUB</button>
+           <div className="flex gap-6">
+             <button onClick={() => startGame()} className="px-10 py-4 bg-transparent border-2 border-[#50c8e8] text-[#50c8e8] hover:bg-[#50c8e8]/20 font-bold tracking-[0.2em] transition-all">RIPROVA</button>
+             <button onClick={onExit} className="px-10 py-4 bg-transparent border-2 border-white/20 text-white/40 hover:border-white/60 hover:text-white font-bold tracking-[0.2em] transition-all">HUB</button>
            </div>
         </div>
       )}
