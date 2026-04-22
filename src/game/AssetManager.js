@@ -16,7 +16,8 @@ export class AssetManager {
     this.models = {};
     this.textures = {
       boss: { fire: {}, ice: {}, earth: {} },
-      sword: {}
+      sword: {},
+      character: {}
     };
     this.isLoaded = false;
   }
@@ -25,23 +26,26 @@ export class AssetManager {
     console.log('Starting asset load...');
     try {
       // 1. Load the actual models
-      const [bossModel, swordModel, characterModel] = await Promise.all([
+      const [bossModel, swordModel, characterModel, goblinModel] = await Promise.all([
         this.loadFBX('/models/boss.fbx'),
         this.loadFBX('/models/sword.fbx'),
-        this.loadFBX('/models/character.fbx')
+        this.loadFBX('/models/character.fbx'),
+        this.loadFBX('/models/goblin.fbx')
       ]);
 
       this.models.boss = bossModel;
       this.models.sword = swordModel;
       this.models.character = characterModel;
+      this.models.goblin = goblinModel;
 
       // 2. Load textures for variations
-      // Boss Fire
+      // Boss textures
       this.textures.boss.fire = await this.loadBossTextures('fire', 'Flamy');
-      // Boss Ice
       this.textures.boss.ice = await this.loadBossTextures('ice', 'Ice');
-      // Boss Earth
       this.textures.boss.earth = await this.loadBossTextures('earth', 'Earthen');
+
+      // Character textures
+      this.textures.character = await this.loadCharacterTextures();
 
       this.isLoaded = true;
       console.log('All assets loaded successfully.');
@@ -52,33 +56,61 @@ export class AssetManager {
   }
 
   loadFBX(url) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       this.loader.load(url, 
         (fbx) => resolve(fbx),
         undefined,
-        (err) => reject(err)
+        (err) => {
+          console.error(`Failed to load FBX: ${url}`, err);
+          resolve(null); // Fallback to null instead of crashing
+        }
       );
     });
   }
 
   async loadBossTextures(element, fileNamePart) {
     const path = `/textures/boss/${element}/`;
-    // We expect basic PBR textures: Diffuse, Normal, Emissive, Roughness
-    const [diffuse, normal, emissive, roughness] = await Promise.all([
-      this.loadTexture(`${path}Elemental_LP_${fileNamePart}_Elemental_Diffuse.png`),
-      this.loadTexture(`${path}Elemental_LP_${fileNamePart}_Elemental_NormalOGL.png`),
-      this.loadTexture(`${path}Elemental_LP_${fileNamePart}_Elemental_Emissive.png`),
-      this.loadTexture(`${path}Elemental_LP_${fileNamePart}_Elemental_Roughness.png`)
-    ]);
-    return { diffuse, normal, emissive, roughness };
+    try {
+      const [diffuse, normal, emissive, roughness] = await Promise.all([
+        this.loadTexture(`${path}Elemental_LP_${fileNamePart}_Elemental_Diffuse.png`),
+        this.loadTexture(`${path}Elemental_LP_${fileNamePart}_Elemental_NormalOGL.png`),
+        this.loadTexture(`${path}Elemental_LP_${fileNamePart}_Elemental_Emissive.png`),
+        this.loadTexture(`${path}Elemental_LP_${fileNamePart}_Elemental_Roughness.png`)
+      ]);
+      return { diffuse, normal, emissive, roughness };
+    } catch (e) {
+      console.warn(`Boss textures for ${element} failed to load`, e);
+      return {};
+    }
+  }
+
+  async loadCharacterTextures() {
+    const path = '/textures/character/';
+    try {
+      const [diffuse, normal, orm] = await Promise.all([
+        this.loadTexture(`${path}T_Armor_BaseColor.png`),
+        this.loadTexture(`${path}T_Armor_Normal.png`),
+        this.loadTexture(`${path}T_Armor_OcclusionRoughnessMetallic.png`)
+      ]);
+      return { diffuse, normal, orm };
+    } catch (e) {
+      console.warn('Character textures failed to load', e);
+      return {};
+    }
   }
 
   loadTexture(url) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       this.texLoader.load(url, 
-        (tex) => resolve(tex),
+        (tex) => {
+          if (tex) tex.colorSpace = THREE.SRGBColorSpace;
+          resolve(tex);
+        },
         undefined,
-        (err) => reject(err)
+        (err) => {
+          console.warn(`Failed to load texture: ${url}`, err);
+          resolve(null);
+        }
       );
     });
   }
@@ -90,18 +122,19 @@ export class AssetManager {
     const element = elements[type % 3];
     const tex = this.textures.boss[element];
 
-    // Apply materials to all meshes in the FBX
     group.traverse(child => {
       if (child.isMesh) {
-        child.material = new THREE.MeshStandardMaterial({
-          map: tex.diffuse,
-          normalMap: tex.normal,
-          emissiveMap: tex.emissive,
-          emissive: element === 'fire' ? 0xff4000 : (element === 'ice' ? 0x0080ff : 0x00ff40),
-          emissiveIntensity: 1.5,
-          roughnessMap: tex.roughness,
-          metalness: 0.1
-        });
+        if (tex && tex.diffuse) {
+          child.material = new THREE.MeshStandardMaterial({
+            map: tex.diffuse,
+            normalMap: tex.normal,
+            emissiveMap: tex.emissive,
+            emissive: element === 'fire' ? 0xff4000 : (element === 'ice' ? 0x0080ff : 0x00ff40),
+            emissiveIntensity: 1.5,
+            roughnessMap: tex.roughness,
+            metalness: 0.1
+          });
+        }
       }
     });
 
@@ -111,14 +144,34 @@ export class AssetManager {
   getSwordModel() {
     if (!this.models.sword) return null;
     const model = this.models.sword.clone();
-    model.scale.set(0.001, 0.001, 0.001); // Significant reduction to avoid screen blocking
+    model.scale.set(0.001, 0.001, 0.001); 
     return model;
   }
 
   getCharacterModel() {
      if (!this.models.character) return null;
      const model = this.models.character.clone();
-     model.scale.set(0.001, 0.001, 0.001);
+     model.scale.set(0.012, 0.012, 0.012); 
+
+     if (this.textures.character && this.textures.character.diffuse) {
+        model.traverse(child => {
+          if (child.isMesh) {
+            child.material = new THREE.MeshStandardMaterial({
+              map: this.textures.character.diffuse,
+              normalMap: this.textures.character.normal,
+              roughnessMap: this.textures.character.orm,
+              metalness: 0.5
+            });
+          }
+        });
+     }
+     return model;
+  }
+
+  getGoblinModel() {
+     if (!this.models.goblin) return null;
+     const model = this.models.goblin.clone();
+     model.scale.set(0.01, 0.01, 0.01);
      return model;
   }
 }

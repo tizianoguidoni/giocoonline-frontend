@@ -139,13 +139,13 @@ export class Enemy {
 
     let group, eyeL, eyeR, armL, armR, legL, legR;
     
-    if (this.isBoss && assetManager.isLoaded) {
+    if (this.isBoss && assetManager.isLoaded && assetManager.models.boss) {
       // Pick a random element (0: Fire, 1: Ice, 2: Earth)
       this.bossType = Math.floor(Math.random() * 3);
       group = assetManager.getBossVariant(this.bossType);
       
       // If we have an FBX model, setup animations
-      if (group.animations && group.animations.length > 0) {
+      if (group && group.animations && group.animations.length > 0) {
         this.mixer = new THREE.AnimationMixer(group);
         this.clips = {};
         group.animations.forEach(clip => {
@@ -169,8 +169,33 @@ export class Enemy {
     } else {
       const types = ['orc', 'goblin', 'spider'];
       const chosenType = skin ? skin.type : types[Math.floor(Math.random() * 3)];
-      const meshData = buildEnemyMesh({ type: chosenType, scale, isBoss: false });
-      group = meshData.group;
+      
+      if (assetManager.isLoaded) {
+        if (chosenType === 'goblin' && assetManager.models.goblin) {
+          group = assetManager.getGoblinModel();
+        } else if (chosenType === 'orc' && assetManager.models.character) {
+          group = assetManager.getCharacterModel();
+        }
+      }
+
+      if (!group) {
+        const meshData = buildEnemyMesh({ type: chosenType, scale, isBoss: false });
+        group = meshData.group;
+      }
+
+      // Setup animations for non-boss models if they exist
+      if (group && group.animations && group.animations.length > 0) {
+        this.mixer = new THREE.AnimationMixer(group);
+        this.clips = {};
+        group.animations.forEach(clip => {
+            const name = clip.name.toLowerCase();
+            if (name.includes('idle')) this.clips.idle = this.mixer.clipAction(clip);
+            if (name.includes('run') || name.includes('walk')) this.clips.run = this.mixer.clipAction(clip);
+            if (name.includes('attack')) this.clips.attack = this.mixer.clipAction(clip);
+        });
+        if (this.clips.idle) this.clips.idle.play();
+      }
+
       this.enemyType = chosenType;
     }
 

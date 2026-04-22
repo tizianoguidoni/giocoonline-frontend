@@ -3,6 +3,8 @@
 
 import * as THREE from 'three';
 
+const loader = new THREE.TextureLoader();
+
 function makeCanvas(size = 256) {
   const c = document.createElement('canvas');
   c.width = size; c.height = size;
@@ -20,33 +22,12 @@ function finalize(c, opts = {}) {
 // --- Wall textures per zone ---
 
 export function dungeonWallTexture() {
-  const { c, ctx } = makeCanvas(256);
-  // base mortar
-  ctx.fillStyle = '#2a1d1a'; ctx.fillRect(0, 0, 256, 256);
-  // bricks
-  for (let row = 0; row < 8; row++) {
-    for (let col = 0; col < 8; col++) {
-      const off = row % 2 === 0 ? 0 : 16;
-      const x = col * 32 - off;
-      const y = row * 32;
-      const b = 30 + Math.random() * 25;
-      ctx.fillStyle = `rgb(${60 + b | 0},${38 + b / 2 | 0},${34 + b / 3 | 0})`;
-      ctx.fillRect(x + 1, y + 1, 30, 30);
-      // weathering
-      ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.25})`;
-      ctx.fillRect(x + Math.random() * 20, y + Math.random() * 20, Math.random() * 10, Math.random() * 6);
-    }
-  }
-  // rune scratches
-  ctx.strokeStyle = 'rgba(255,100,30,0.3)';
-  ctx.lineWidth = 1;
-  for (let i = 0; i < 4; i++) {
-    ctx.beginPath();
-    ctx.moveTo(Math.random() * 256, Math.random() * 256);
-    ctx.lineTo(Math.random() * 256, Math.random() * 256);
-    ctx.stroke();
-  }
-  return finalize(c, { repeat: 1 });
+  // Use the real rock texture generated
+  const tex = loader.load('/textures/maze/rock_wall.png');
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(1, 1);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
 }
 
 export function gardenWallTexture() {
