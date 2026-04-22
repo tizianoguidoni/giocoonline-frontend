@@ -163,20 +163,28 @@ export function buildViewmodelFor(weaponId) {
     case 'magestaff': return buildStaffViewmodel();
     case 'soulblade': {
       const group = new THREE.Group();
-      const model = assetManager.getSwordModel() || buildSwordViewmodel(0xff4060);
-      model.rotation.set(0, -Math.PI/2, 0.45);
-      model.scale.setScalar(0.0015);
-      model.position.set(0, 0.2, 0); // aggiusta altezza nel gruppo
-      group.add(model);
+      const fbxModel = assetManager.getSwordModel();
+      if (fbxModel) {
+        fbxModel.rotation.set(0, -Math.PI/2, 0.45);
+        fbxModel.scale.setScalar(0.0015);
+        fbxModel.position.set(0, 0.2, 0);
+        group.add(fbxModel);
+      } else {
+        group.add(buildSwordViewmodel(0xff4060));
+      }
       return group;
     }
     default: {
       const group = new THREE.Group();
-      const model = assetManager.getSwordModel() || buildSwordViewmodel(0xd0e0ff);
-      model.rotation.set(0, -Math.PI/2, 0.45);
-      model.scale.setScalar(0.0015);
-      model.position.set(0, 0.2, 0); // aggiusta altezza nel gruppo
-      group.add(model);
+      const fbxModel = assetManager.getSwordModel();
+      if (fbxModel) {
+        fbxModel.rotation.set(0, -Math.PI/2, 0.45);
+        fbxModel.scale.setScalar(0.0015);
+        fbxModel.position.set(0, 0.2, 0);
+        group.add(fbxModel);
+      } else {
+        group.add(buildSwordViewmodel(0xd0e0ff));
+      }
       return group;
     }
   }

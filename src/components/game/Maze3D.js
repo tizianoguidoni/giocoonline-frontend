@@ -8,7 +8,10 @@ import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import axios from 'axios';
 
-const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000/api';
+// Ensure /api is always present in the base URL
+const API = process.env.REACT_APP_BACKEND_URL 
+  ? (process.env.REACT_APP_BACKEND_URL.endsWith('/api') ? process.env.REACT_APP_BACKEND_URL : `${process.env.REACT_APP_BACKEND_URL}/api`)
+  : 'http://localhost:8000/api';
 
 export default function Maze3D({ onExit }) {
   const { user, character, refreshCharacter } = useAuth();
@@ -39,19 +42,37 @@ export default function Maze3D({ onExit }) {
   }, []);
 
   const startGame = useCallback(() => {
-    if (gameRef.current) { gameRef.current.stop(); gameRef.current = null; }
-    setEnd(null); setState(null);
-    const g = new Game(canvasRef.current, handleEvent);
-    gameRef.current = g;
-    g.start();
-    setStarted(true);
-    setTimeout(() => g.requestPointerLock(), 100);
+    console.log("Maze3D: Starting Game...");
+    if (gameRef.current) { 
+        console.log("Maze3D: Cleaning up old game instance");
+        gameRef.current.stop(); 
+        gameRef.current = null; 
+    }
+    setEnd(null); 
+    setState(null);
+    
+    try {
+        const g = new Game(canvasRef.current, handleEvent);
+        gameRef.current = g;
+        g.start();
+        setStarted(true);
+        console.log("Maze3D: Game started successfully");
+        setTimeout(() => g.requestPointerLock(), 100);
+    } catch (err) {
+        console.error("Maze3D: CRITICAL ERROR STARTING GAME:", err);
+        toast.error("Errore critico durante l'avvio del labirinto.");
+    }
   }, [handleEvent]);
 
   useEffect(() => {
     if (!isAssetsLoaded) {
+       console.log("Maze3D: Loading assets...");
        assetManager.loadAll().then(() => {
+          console.log("Maze3D: Assets loaded successfully");
           setIsAssetsLoaded(true);
+       }).catch(err => {
+          console.error("Maze3D: Failed to load assets:", err);
+          setIsAssetsLoaded(true); // Proceed anyway with fallbacks
        });
     }
   }, [isAssetsLoaded]);
@@ -63,7 +84,12 @@ export default function Maze3D({ onExit }) {
   }, [isAssetsLoaded, started, end, startGame]);
 
   useEffect(() => {
-    return () => { if (gameRef.current) gameRef.current.stop(); };
+    return () => { 
+        if (gameRef.current) {
+            console.log("Maze3D: Component unmounting, stopping game");
+            gameRef.current.stop(); 
+        }
+    };
   }, []);
 
   useEffect(() => {
@@ -96,12 +122,13 @@ export default function Maze3D({ onExit }) {
       if (end && state) {
         if (end === 'win') {
           toast.success(`FUGA RIUSCITA! Hai mantenuto ${state.score} monete e guadagnato XP!`);
-          // Here we would call an API point to save the loot securely
           try {
-             // Example endpoint, replace appropriately later
+             console.log(`Maze3D: Sending rewards to ${API}/combat/maze-win`);
              await axios.post(`${API}/combat/maze-win`, { gold: state.score });
              refreshCharacter();
-          } catch(e) {}
+          } catch(e) {
+             console.error("Maze3D: Failed to send rewards:", e);
+          }
         } else {
           toast.error("SEI MORTO. Hai perso il bottino in tasca.");
         }
@@ -181,10 +208,13 @@ export default function Maze3D({ onExit }) {
                    setStarted(false); 
                    if (state && state.score > 0) {
                      try {
+                        console.log(`Maze3D: Sending partial rewards to ${API}/combat/maze-win`);
                         await axios.post(`${API}/combat/maze-win`, { gold: state.score });
                         refreshCharacter();
                         toast.success(`Hai salvato ${state.score} monete.`);
-                     } catch(e) { }
+                     } catch(e) { 
+                        console.error("Maze3D: Failed to send partial rewards:", e);
+                     }
                    }
                    if (gameRef.current) gameRef.current.stop(); 
                    onExit(); 
