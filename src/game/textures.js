@@ -32,32 +32,29 @@ export function dungeonWallTexture() {
 
 export function gardenWallTexture() {
   const { c, ctx } = makeCanvas(256);
-  // stone
-  ctx.fillStyle = '#3a4a2a'; ctx.fillRect(0, 0, 256, 256);
-  for (let i = 0; i < 400; i++) {
-    const r = 50 + Math.random() * 40;
-    const g = 70 + Math.random() * 40;
-    const b = 40 + Math.random() * 30;
-    ctx.fillStyle = `rgba(${r | 0},${g | 0},${b | 0},${0.3 + Math.random() * 0.5})`;
-    ctx.fillRect(Math.random() * 256, Math.random() * 256, 2 + Math.random() * 6, 2 + Math.random() * 6);
-  }
-  // moss/ivy
-  ctx.fillStyle = 'rgba(30,80,40,0.6)';
-  for (let i = 0; i < 80; i++) {
+  ctx.fillStyle = '#2a3d1a'; ctx.fillRect(0, 0, 256, 256);
+  // Leaf clusters
+  for (let i = 0; i < 600; i++) {
+    const x = Math.random() * 256;
+    const y = Math.random() * 256;
+    const r = 20 + Math.random() * 30;
+    const g = 60 + Math.random() * 40;
+    const b = 15 + Math.random() * 15;
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
     ctx.beginPath();
-    ctx.arc(Math.random() * 256, Math.random() * 256, 3 + Math.random() * 8, 0, Math.PI * 2);
+    ctx.ellipse(x, y, 4 + Math.random() * 8, 2 + Math.random() * 4, Math.random() * Math.PI, 0, Math.PI * 2);
     ctx.fill();
   }
-  // cracks
-  ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+  // Vines
+  ctx.strokeStyle = '#1a2610';
   ctx.lineWidth = 1.5;
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 15; i++) {
     ctx.beginPath();
-    let x = Math.random() * 256, y = Math.random() * 256;
+    let x = Math.random() * 256, y = 0;
     ctx.moveTo(x, y);
-    for (let j = 0; j < 4; j++) {
-      x += (Math.random() - 0.5) * 60;
-      y += (Math.random() - 0.5) * 60;
+    for (let j = 0; j < 8; j++) {
+      x += (Math.random() - 0.5) * 40;
+      y += 32;
       ctx.lineTo(x, y);
     }
     ctx.stroke();
@@ -67,26 +64,32 @@ export function gardenWallTexture() {
 
 export function catacombsWallTexture() {
   const { c, ctx } = makeCanvas(256);
-  // sand-stone
-  ctx.fillStyle = '#4a3828'; ctx.fillRect(0, 0, 256, 256);
-  for (let i = 0; i < 800; i++) {
-    const v = 80 + Math.random() * 60;
-    ctx.fillStyle = `rgba(${v | 0},${(v - 20) | 0},${(v - 40) | 0},${Math.random() * 0.6})`;
-    ctx.fillRect(Math.random() * 256, Math.random() * 256, 2, 2);
+  // brick base
+  ctx.fillStyle = '#3d2b1f'; ctx.fillRect(0, 0, 256, 256);
+  ctx.fillStyle = '#4d3b2f';
+  const bh = 32, bw = 64;
+  for (let y = 0; y < 256; y += bh) {
+    const offset = (y / bh % 2) * (bw / 2);
+    for (let x = -bw; x < 256; x += bw) {
+      ctx.fillRect(x + offset + 2, y + 2, bw - 4, bh - 4);
+    }
   }
-  // bone etchings
-  ctx.strokeStyle = 'rgba(220,200,170,0.35)';
-  ctx.lineWidth = 1.2;
-  for (let i = 0; i < 5; i++) {
-    const cx = Math.random() * 256, cy = Math.random() * 256;
-    ctx.beginPath();
-    ctx.arc(cx, cy, 8 + Math.random() * 6, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(cx, cy + 4); ctx.lineTo(cx, cy + 18);
-    ctx.stroke();
+  // mortar/noise
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  for (let i = 0; i < 400; i++) {
+    ctx.fillRect(Math.random() * 256, Math.random() * 256, 1, 1);
   }
   return finalize(c, { repeat: 1 });
+}
+
+export function genericCeilingTexture() {
+  const { c, ctx } = makeCanvas(256);
+  ctx.fillStyle = '#0a080a'; ctx.fillRect(0, 0, 256, 256);
+  ctx.fillStyle = '#1a181a';
+  for (let i = 0; i < 1000; i++) {
+    ctx.fillRect(Math.random() * 256, Math.random() * 256, 1, 2);
+  }
+  return finalize(c, { repeat: 2 });
 }
 
 export function abyssWallTexture() {
@@ -202,9 +205,9 @@ export function abyssFloorTexture() {
 // Compile all textures on demand (once per game)
 export function buildZoneTextures() {
   return {
-    dungeon:   { wall: dungeonWallTexture(),   floor: dungeonFloorTexture() },
-    garden:    { wall: gardenWallTexture(),    floor: gardenFloorTexture() },
-    catacombs: { wall: catacombsWallTexture(), floor: catacombsFloorTexture() },
-    abyss:     { wall: abyssWallTexture(),     floor: abyssFloorTexture() },
+    dungeon:   { wall: dungeonWallTexture(),   floor: dungeonFloorTexture(),   ceil: genericCeilingTexture() },
+    garden:    { wall: gardenWallTexture(),    floor: gardenFloorTexture(),    ceil: genericCeilingTexture() },
+    catacombs: { wall: catacombsWallTexture(), floor: catacombsFloorTexture(), ceil: genericCeilingTexture() },
+    abyss:     { wall: abyssWallTexture(),     floor: abyssFloorTexture(),     ceil: genericCeilingTexture() },
   };
 }

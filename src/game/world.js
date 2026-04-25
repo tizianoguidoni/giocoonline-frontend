@@ -120,14 +120,19 @@ export class World {
     }
 
     // Ceiling: one quadrant per zone (skip outdoor zones)
-    const ceilMat = new THREE.MeshStandardMaterial({ color: 0x050305, roughness: 1 });
     for (const z of Object.values(ZONES)) {
       if (z.outdoor) continue;
+      const tex = this.textures[z.id]?.ceil;
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0x888888,
+        map: tex,
+        roughness: 1,
+      });
       const w = halfW; const h = halfH;
       let cx = 0, cz = 0;
       if (z.id === 'dungeon')   { cx = -w / 2; cz = -h / 2; }
       if (z.id === 'catacombs') { cx = -w / 2; cz =  h / 2; }
-      const ceil = new THREE.Mesh(new THREE.PlaneGeometry(w, h), ceilMat);
+      const ceil = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
       ceil.rotation.x = Math.PI / 2;
       ceil.position.set(cx, CEILING_H, cz);
       this.scene.add(ceil);
@@ -299,11 +304,12 @@ export class World {
   }
 
   setTheme(themeName) {
-    let wallTex, floorTex, wallColor, floorColor, skyColor, fogColor;
+    let wallTex, floorTex, ceilTex, wallColor, floorColor, skyColor, fogColor;
     switch (themeName) {
       case 'natura':
         wallTex = this.textures.garden.wall;
         floorTex = this.textures.garden.floor;
+        ceilTex = this.textures.garden.ceil;
         wallColor = 0x2a4d1a; floorColor = 0x1a3d0a;
         skyColor = 0x87ceeb; // Sky Blue
         fogColor = 0x87ceeb;
@@ -311,6 +317,7 @@ export class World {
       case 'mattoni':
         wallTex = this.textures.catacombs.wall;
         floorTex = this.textures.catacombs.floor;
+        ceilTex = this.textures.catacombs.ceil;
         wallColor = 0x8b4513; floorColor = 0x4a2a15;
         skyColor = 0x1a0a05;
         fogColor = 0x1a0a05;
@@ -318,6 +325,7 @@ export class World {
       default: // pietra (dungeon)
         wallTex = this.textures.dungeon.wall;
         floorTex = this.textures.dungeon.floor;
+        ceilTex = this.textures.dungeon.ceil;
         wallColor = 0x606060; floorColor = 0x303030;
         skyColor = 0x050014;
         fogColor = 0x0a0608;
@@ -333,9 +341,11 @@ export class World {
           obj.material.color.setHex(wallColor);
           obj.material.needsUpdate = true;
         }
+        // Floor and Ceiling update
         if (obj.geometry.type === 'PlaneGeometry' && obj.material && !obj.userData.isDoor && !obj.isSky) {
-          obj.material.map = floorTex;
-          obj.material.color.setHex(floorColor);
+          const isCeil = obj.position.y > 2;
+          obj.material.map = isCeil ? ceilTex : floorTex;
+          obj.material.color.setHex(isCeil ? 0x888888 : floorColor);
           obj.material.needsUpdate = true;
         }
       }
