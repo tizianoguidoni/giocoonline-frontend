@@ -139,6 +139,8 @@ export class World {
       color: 0x050014, side: THREE.BackSide, fog: false,
     });
     const sky = new THREE.Mesh(skyGeo, skyMat);
+    sky.isSky = true;
+    this.sky = sky;
     this.scene.add(sky);
 
     // Stars (reduced: 300)
@@ -297,23 +299,32 @@ export class World {
   }
 
   setTheme(themeName) {
-    let wallTex, floorTex, wallColor, floorColor;
+    let wallTex, floorTex, wallColor, floorColor, skyColor, fogColor;
     switch (themeName) {
       case 'natura':
         wallTex = this.textures.garden.wall;
         floorTex = this.textures.garden.floor;
         wallColor = 0x2a4d1a; floorColor = 0x1a3d0a;
+        skyColor = 0x87ceeb; // Sky Blue
+        fogColor = 0x87ceeb;
         break;
       case 'mattoni':
         wallTex = this.textures.catacombs.wall;
         floorTex = this.textures.catacombs.floor;
         wallColor = 0x8b4513; floorColor = 0x4a2a15;
+        skyColor = 0x1a0a05;
+        fogColor = 0x1a0a05;
         break;
       default: // pietra (dungeon)
         wallTex = this.textures.dungeon.wall;
         floorTex = this.textures.dungeon.floor;
         wallColor = 0x606060; floorColor = 0x303030;
+        skyColor = 0x050014;
+        fogColor = 0x0a0608;
     }
+
+    if (this.sky) this.sky.material.color.setHex(skyColor);
+    if (this.scene.fog) this.scene.fog.color.setHex(fogColor);
 
     this.scene.traverse(obj => {
       if (obj.isInstancedMesh || obj.isMesh) {
@@ -322,7 +333,7 @@ export class World {
           obj.material.color.setHex(wallColor);
           obj.material.needsUpdate = true;
         }
-        if (obj.geometry.type === 'PlaneGeometry' && obj.material && !obj.userData.isDoor) {
+        if (obj.geometry.type === 'PlaneGeometry' && obj.material && !obj.userData.isDoor && !obj.isSky) {
           obj.material.map = floorTex;
           obj.material.color.setHex(floorColor);
           obj.material.needsUpdate = true;

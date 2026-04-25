@@ -773,6 +773,16 @@ export class Game {
     };
   }
 
+  setDayNight(isDay) {
+    if (this.world && this.world.sky) {
+      const skyCol = isDay ? 0x87ceeb : 0x050014;
+      const ambInt = isDay ? 1.8 : 0.6;
+      this.world.sky.material.color.setHex(skyCol);
+      this.ambient.intensity = ambInt;
+      this.onEvent({ type: 'toast', text: `⏰ Ciclo cambiato: ${isDay ? 'GIORNO' : 'NOTTE'}` });
+    }
+  }
+
   setTheme(theme) {
     if (this.world) this.world.setTheme(theme);
     this.onEvent({ type: 'toast', text: `🎨 Tema cambiato: ${theme.toUpperCase()}` });

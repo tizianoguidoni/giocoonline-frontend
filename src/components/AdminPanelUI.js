@@ -238,8 +238,8 @@ export function AdminPanelUI({ role, game, onClose }) {
                   <div style={cardStyle}>
                     <div className="text-[10px] font-bold mb-4 flex items-center gap-2"><Moon className="w-3 h-3" /> ILLUMINAZIONE</div>
                     <div className="flex gap-2">
-                      <button onClick={() => game?.setTheme('pietra')} className="flex-1 py-3 bg-white/5 border border-white/10 rounded text-[10px]">GIORNO</button>
-                      <button onClick={() => game?.setTheme('pietra')} className="flex-1 py-3 bg-black border border-white/10 rounded text-[10px]">NOTTE</button>
+                      <button onClick={() => game?.setDayNight(true)} className="flex-1 py-3 bg-white/5 border border-white/10 rounded text-[10px]">GIORNO</button>
+                      <button onClick={() => game?.setDayNight(false)} className="flex-1 py-3 bg-black border border-white/10 rounded text-[10px]">NOTTE</button>
                     </div>
                   </div>
                   <div style={cardStyle}>
