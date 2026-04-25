@@ -766,7 +766,19 @@ export class Game {
     this._updateUI();
   }
 
-  /** Toggle god mode (no damage) */
+  getSessionResults() {
+    return {
+      gold: this.player.pocketMoney + this.player.bankMoney - 50, // Subtract starting pocket money
+      score: this.player.score,
+    };
+  }
+
+  setTheme(theme) {
+    if (this.world) this.world.setTheme(theme);
+    this.onEvent({ type: 'toast', text: `🎨 Tema cambiato: ${theme.toUpperCase()}` });
+  }
+
+  // Toggle god mode (no damage)
   cheatGodMode() {
     this._godMode = !this._godMode;
     return this._godMode;

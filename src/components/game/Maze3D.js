@@ -61,10 +61,18 @@ export default function Maze3D({ onExit }) {
         setTimeout(() => setDamageFlash(false), 200);
         break;
       case 'win':
-        // Handle victory
+        // Handle victory - trigger exit with results
+        setTimeout(() => {
+           const results = gameRef.current ? gameRef.current.getSessionResults() : { gold: 0, score: 0 };
+           onExit(results);
+        }, 2000);
         break;
       case 'death':
         // Handle death
+        setTimeout(() => {
+           const results = gameRef.current ? gameRef.current.getSessionResults() : { gold: 0, score: 0 };
+           onExit(results);
+        }, 2000);
         break;
       default:
         break;
@@ -131,8 +139,8 @@ export default function Maze3D({ onExit }) {
       
       return () => {
         console.log("Maze3D: Component unmounting, stopping game");
-        canvasRef.current.removeEventListener('click', lock);
-        g.stop();
+        if (canvasRef.current) canvasRef.current.removeEventListener('click', lock);
+        if (g) g.stop();
         gameRef.current = null;
       };
     }
@@ -188,7 +196,7 @@ export default function Maze3D({ onExit }) {
                 </div>
               </div>
 
-              {/* Minimap Placeholder - Real one is built in Three.js but we can overlay info */}
+              {/* Minimap Placeholder */}
               <div className="w-48 h-48 bg-black/60 border border-white/10 rounded-xl overflow-hidden shadow-2xl backdrop-blur-md">
                  <div className="absolute top-2 left-2 flex gap-1">
                     {gameState.keys.map(k => (
@@ -319,7 +327,10 @@ export default function Maze3D({ onExit }) {
                   RESTA
                 </button>
                 <button 
-                  onClick={onExit}
+                  onClick={() => {
+                    const results = gameRef.current ? gameRef.current.getSessionResults() : { gold: 0, score: 0 };
+                    onExit(results);
+                  }}
                   className="flex-1 py-4 bg-[#E63946] hover:bg-[#ff4d4d] text-white font-bold rounded-2xl transition-all"
                 >
                   ESCI

@@ -296,6 +296,41 @@ export class World {
     return null;
   }
 
+  setTheme(themeName) {
+    let wallTex, floorTex, wallColor, floorColor;
+    switch (themeName) {
+      case 'natura':
+        wallTex = this.textures.garden.wall;
+        floorTex = this.textures.garden.floor;
+        wallColor = 0x2a4d1a; floorColor = 0x1a3d0a;
+        break;
+      case 'mattoni':
+        wallTex = this.textures.catacombs.wall;
+        floorTex = this.textures.catacombs.floor;
+        wallColor = 0x8b4513; floorColor = 0x4a2a15;
+        break;
+      default: // pietra (dungeon)
+        wallTex = this.textures.dungeon.wall;
+        floorTex = this.textures.dungeon.floor;
+        wallColor = 0x606060; floorColor = 0x303030;
+    }
+
+    this.scene.traverse(obj => {
+      if (obj.isInstancedMesh || obj.isMesh) {
+        if (obj.userData.isWall && obj.material) {
+          obj.material.map = wallTex;
+          obj.material.color.setHex(wallColor);
+          obj.material.needsUpdate = true;
+        }
+        if (obj.geometry.type === 'PlaneGeometry' && obj.material && !obj.userData.isDoor) {
+          obj.material.map = floorTex;
+          obj.material.color.setHex(floorColor);
+          obj.material.needsUpdate = true;
+        }
+      }
+    });
+  }
+
   // Update animations (doors opening)
   update(dt) {
     for (const d of this.doorMeshes) {

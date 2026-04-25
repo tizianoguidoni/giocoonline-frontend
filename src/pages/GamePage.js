@@ -437,10 +437,18 @@ export default function GamePage() {
                   className="h-full w-full relative"
                 >
                   {isInMaze ? (
-                    <Maze3D onExit={() => {
+                    <Maze3D onExit={async (results) => {
                       setIsInMaze(false);
-                      if (document.fullscreenElement) {
-                        document.exitFullscreen().catch(() => {});
+                      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+                      if (results && results.gold > 0) {
+                        try {
+                          const token = localStorage.getItem('token');
+                          const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+                          await axios.post(`${baseUrl}/api/combat/maze-win`, { gold: results.gold }, {
+                            headers: { Authorization: `Bearer ${token}` }
+                          });
+                          toast.success(`+${results.gold}€ salvati!`);
+                        } catch (err) { console.error(err); toast.error("Errore salvataggio!"); }
                       }
                     }} />
                   ) : (
