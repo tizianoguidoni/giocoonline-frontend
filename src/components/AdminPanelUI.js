@@ -7,6 +7,17 @@ export function AdminPanelUI({ role, game, onClose }) {
   const [tab, setTab] = useState(role === 'owner' ? 'cheats' : 'moderation');
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [minimapData, setMinimapData] = useState(null);
+
+  useEffect(() => {
+    if (game) {
+      try {
+        setMinimapData(game.getMinimapData());
+      } catch (e) {
+        console.error("Failed to get initial minimap data", e);
+      }
+    }
+  }, [game]);
 
   useEffect(() => {
     if (tab === 'moderation') {
@@ -41,6 +52,25 @@ export function AdminPanelUI({ role, game, onClose }) {
   };
 
   const themeColor = '#ff3c00'; // Admin Orange/Red
+
+  const cheatBtnStyle = {
+    background: 'rgba(255, 60, 0, 0.1)',
+    border: '1px solid #ff3c00',
+    color: '#ff3c00',
+    padding: '15px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: 10
+  };
+
+  const actionBtnStyle = {
+    background: '#222',
+    border: '1px solid #444',
+    color: '#ccc',
+    fontSize: 9,
+    padding: '3px 8px',
+    cursor: 'pointer'
+  };
 
   return (
     <div style={{
@@ -101,8 +131,10 @@ export function AdminPanelUI({ role, game, onClose }) {
                         <div 
                           key={`${x}-${y}`}
                           onClick={() => {
-                            game.teleportToCell(x, y);
-                            setMinimapData(game.getMinimapData());
+                            if (game) {
+                              game.teleportToCell(x, y);
+                              setMinimapData(game.getMinimapData());
+                            }
                           }}
                           style={{
                             background: isPlayer ? '#00ff00' : isExit ? '#00ffff' : cell === 1 ? '#333' : '#111',
@@ -117,15 +149,15 @@ export function AdminPanelUI({ role, game, onClose }) {
 
               {/* Game Toggles */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
-                <button onClick={() => game.cheatGodMode() && alert('GOD MODE ATTIVA')} style={cheatBtnStyle}>GOD MODE: ON/OFF</button>
-                <button onClick={() => game.cheatKillAll()} style={cheatBtnStyle}>KILL ALL ENEMIES</button>
-                <button onClick={() => game.cheatHeal()} style={cheatBtnStyle}>RESTORE HP/MANA</button>
+                <button onClick={() => game?.cheatGodMode() && alert('GOD MODE ATTIVA')} style={cheatBtnStyle}>GOD MODE: ON/OFF</button>
+                <button onClick={() => game?.cheatKillAll()} style={cheatBtnStyle}>KILL ALL ENEMIES</button>
+                <button onClick={() => game?.cheatHeal()} style={cheatBtnStyle}>RESTORE HP/MANA</button>
                 
                 <div style={{ marginTop: 10 }}>
                   <div style={{ fontSize: 11, marginBottom: 5 }}>PLAYER SPEED MULTIPLIER</div>
                   <div style={{ display: 'flex', gap: 10 }}>
                     {[1, 2, 3, 5].map(v => (
-                      <button key={v} onClick={() => game.cheatSetSpeed(v)} style={actionBtnStyle}>{v}x</button>
+                      <button key={v} onClick={() => game?.cheatSetSpeed(v)} style={actionBtnStyle}>{v}x</button>
                     ))}
                   </div>
                 </div>
@@ -151,9 +183,9 @@ export function AdminPanelUI({ role, game, onClose }) {
 
           {tab === 'cheats' && role === 'owner' && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15 }}>
-              <button onClick={() => game.cheatGiveMoney(5000)} style={cheatBtnStyle}>AGGIUNGI 5000€</button>
-              <button onClick={() => game.cheatGiveMoney(50000)} style={cheatBtnStyle}>AGGIUNGI 50000€</button>
-              <button onClick={() => game.cheatUnlockAll?.()} style={cheatBtnStyle}>SBLOCCA TUTTE LE ARMI</button>
+              <button onClick={() => game?.cheatGiveMoney(5000)} style={cheatBtnStyle}>AGGIUNGI 5000€</button>
+              <button onClick={() => game?.cheatGiveMoney(50000)} style={cheatBtnStyle}>AGGIUNGI 50000€</button>
+              <button onClick={() => game?.cheatUnlockAll?.()} style={cheatBtnStyle}>SBLOCCA TUTTE LE ARMI</button>
             </div>
           )}
 
@@ -199,22 +231,3 @@ export function AdminPanelUI({ role, game, onClose }) {
     </div>
   );
 }
-
-const cheatBtnStyle = {
-  background: 'rgba(255, 60, 0, 0.1)',
-  border: '1px solid #ff3c00',
-  color: '#ff3c00',
-  padding: '15px',
-  cursor: 'pointer',
-  fontWeight: 'bold',
-  fontSize: 10
-};
-
-const actionBtnStyle = {
-  background: '#222',
-  border: '1px solid #444',
-  color: '#ccc',
-  fontSize: 9,
-  padding: '3px 8px',
-  cursor: 'pointer'
-};
