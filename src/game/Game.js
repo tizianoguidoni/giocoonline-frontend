@@ -205,26 +205,25 @@ export class Game {
     }
     for (const s of enemySpawns) {
       const wp = cellToWorld(s.cx, s.cy, mazeData.grid);
-      const zone = zoneForCell(s.cx, s.cy, mazeData.width, mazeData.height);
       const typeList = ['goblin', 'slime', 'wolf', 'skeleton', 'orc_warrior'];
       const type = typeList[Math.floor(Math.random() * typeList.length)];
-      this.enemies.push(new Enemy(type, wp.x, wp.z));
+      const enemy = new Enemy(type, wp.x, wp.z);
+      this.enemies.push(enemy);
+      this.scene.add(enemy.mesh);
     }
     // Extra enemies in loot rooms
     for (const r of mazeData.rooms.filter(x => x.type === 'loot')) {
       const cx = r.x + Math.floor(r.w / 2);
       const cy = r.y + Math.floor(r.h / 2);
       const wp = cellToWorld(cx, cy, mazeData.grid);
-      this.enemies.push(new Enemy('orc_warrior', wp.x, wp.z));
+      const enemy = new Enemy('orc_warrior', wp.x, wp.z);
+      this.enemies.push(enemy);
+      this.scene.add(enemy.mesh);
     }
     // Boss
-    const bossRoom = mazeData.rooms.find(r => r.type === 'boss');
-    if (bossRoom) {
-      const cx = bossRoom.x + Math.floor(bossRoom.w / 2);
-      const cy = bossRoom.y + Math.floor(bossRoom.h / 2);
-      const wp = cellToWorld(cx, cy, mazeData.grid);
       this.boss = new Enemy('boss', wp.x, wp.z);
       this.enemies.push(this.boss);
+      this.scene.add(this.boss.mesh);
     }
 
     // Merchant
@@ -774,11 +773,13 @@ export class Game {
   }
 
   setDayNight(isDay) {
-    if (this.world && this.world.sky) {
+    if (this.world) {
+      this.world.setDayNight(isDay);
       const skyCol = isDay ? 0x87ceeb : 0x050014;
-      const ambInt = isDay ? 1.8 : 0.6;
-      this.world.sky.material.color.setHex(skyCol);
+      const ambInt = isDay ? 1.8 : 0.4;
       this.ambient.intensity = ambInt;
+      // Change torch intensity based on day/night
+      this.torchBaseIntensity = isDay ? 1.0 : 4.2;
       this.onEvent({ type: 'toast', text: `⏰ Ciclo cambiato: ${isDay ? 'GIORNO' : 'NOTTE'}` });
     }
   }

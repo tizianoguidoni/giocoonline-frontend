@@ -32,53 +32,44 @@ export function dungeonWallTexture() {
 
 export function gardenWallTexture() {
   const { c, ctx } = makeCanvas(256);
-  ctx.fillStyle = '#2a3d1a'; ctx.fillRect(0, 0, 256, 256);
-  // Leaf clusters
-  for (let i = 0; i < 600; i++) {
+  ctx.fillStyle = '#1a3a0a'; ctx.fillRect(0, 0, 256, 256);
+  // Dense leaves
+  for (let i = 0; i < 1200; i++) {
     const x = Math.random() * 256;
     const y = Math.random() * 256;
-    const r = 20 + Math.random() * 30;
-    const g = 60 + Math.random() * 40;
-    const b = 15 + Math.random() * 15;
-    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    const v = 40 + Math.random() * 40;
+    ctx.fillStyle = `rgb(${v * 0.4 | 0},${v | 0},${v * 0.2 | 0})`;
     ctx.beginPath();
-    ctx.ellipse(x, y, 4 + Math.random() * 8, 2 + Math.random() * 4, Math.random() * Math.PI, 0, Math.PI * 2);
+    ctx.ellipse(x, y, 3 + Math.random() * 6, 2 + Math.random() * 3, Math.random() * Math.PI, 0, Math.PI * 2);
     ctx.fill();
   }
-  // Vines
-  ctx.strokeStyle = '#1a2610';
-  ctx.lineWidth = 1.5;
-  for (let i = 0; i < 15; i++) {
+  // Flowers
+  for (let i = 0; i < 20; i++) {
+    ctx.fillStyle = ['#ff4080', '#ffcc00', '#ffffff'][Math.floor(Math.random() * 3)];
     ctx.beginPath();
-    let x = Math.random() * 256, y = 0;
-    ctx.moveTo(x, y);
-    for (let j = 0; j < 8; j++) {
-      x += (Math.random() - 0.5) * 40;
-      y += 32;
-      ctx.lineTo(x, y);
-    }
-    ctx.stroke();
+    ctx.arc(Math.random() * 256, Math.random() * 256, 2, 0, Math.PI * 2);
+    ctx.fill();
   }
   return finalize(c, { repeat: 1 });
 }
 
 export function catacombsWallTexture() {
   const { c, ctx } = makeCanvas(256);
-  // brick base
-  ctx.fillStyle = '#3d2b1f'; ctx.fillRect(0, 0, 256, 256);
-  ctx.fillStyle = '#4d3b2f';
+  ctx.fillStyle = '#1a100a'; ctx.fillRect(0, 0, 256, 256); // Mortar
   const bh = 32, bw = 64;
   for (let y = 0; y < 256; y += bh) {
     const offset = (y / bh % 2) * (bw / 2);
     for (let x = -bw; x < 256; x += bw) {
-      ctx.fillRect(x + offset + 2, y + 2, bw - 4, bh - 4);
+      const rx = x + offset;
+      const v = 70 + Math.random() * 40;
+      ctx.fillStyle = `rgb(${v},${v * 0.6 | 0},${v * 0.4 | 0})`;
+      ctx.fillRect(rx + 2, y + 2, bw - 4, bh - 4);
+      // Highlights
+      ctx.fillStyle = 'rgba(255,255,255,0.05)';
+      ctx.fillRect(rx + 2, y + 2, bw - 4, 3);
     }
   }
-  // mortar/noise
-  ctx.fillStyle = 'rgba(0,0,0,0.3)';
-  for (let i = 0; i < 400; i++) {
-    ctx.fillRect(Math.random() * 256, Math.random() * 256, 1, 1);
-  }
+  addNoise(ctx, 256, 15);
   return finalize(c, { repeat: 1 });
 }
 

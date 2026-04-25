@@ -168,11 +168,31 @@ export class World {
     const stars = new THREE.Points(starGeo, starMat);
     this.scene.add(stars);
 
-    // Moon (no glow light — moonlight directional is enough)
+    // Moon
     const moonMat = new THREE.MeshBasicMaterial({ color: 0xe0e8ff, fog: false });
-    const moon = new THREE.Mesh(new THREE.SphereGeometry(5, 16, 12), moonMat);
+    const moon = new THREE.Mesh(new THREE.SphereGeometry(4, 16, 12), moonMat);
     moon.position.set(60, 80, -40);
+    this.moon = moon;
     this.scene.add(moon);
+
+    // Sun
+    const sunMat = new THREE.MeshBasicMaterial({ color: 0xffffcc, fog: false });
+    const sun = new THREE.Mesh(new THREE.SphereGeometry(6, 16, 12), sunMat);
+    sun.position.set(-60, 100, 40);
+    sun.visible = false;
+    this.sun = sun;
+    this.scene.add(sun);
+
+    // Clouds (low-poly planes)
+    this.clouds = new THREE.Group();
+    for (let i = 0; i < 15; i++) {
+      const cloudMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6, fog: false });
+      const cloud = new THREE.Mesh(new THREE.BoxGeometry(20 + Math.random() * 20, 2, 15 + Math.random() * 15), cloudMat);
+      cloud.position.set((Math.random() - 0.5) * 200, 60 + Math.random() * 20, (Math.random() - 0.5) * 200);
+      this.clouds.add(cloud);
+    }
+    this.clouds.visible = false;
+    this.scene.add(this.clouds);
 
     // Directional moonlight
     const moonlight = new THREE.DirectionalLight(0xa0c0ff, 0.35);
@@ -261,6 +281,35 @@ export class World {
         spawned[zone.id]++;
       }
     }
+
+    // --- Wall Torches (placed along corridors) ---
+    this._spawnWallTorches(grid, width, height);
+  }
+
+  _spawnWallTorches(grid, width, height) {
+    for (let y = 1; y < height - 1; y++) {
+      for (let x = 1; x < width - 1; x++) {
+        if (grid[y][x] === CELL.FLOOR) {
+          // Check neighbors for walls to attach torch
+          const neighbors = [
+            { dx: 1, dz: 0, rot: -Math.PI / 2 },
+            { dx: -1, dz: 0, rot: Math.PI / 2 },
+            { dx: 0, dz: 1, rot: 0 },
+            { dx: 0, dz: -1, rot: Math.PI }
+          ];
+          for (const n of neighbors) {
+            if (grid[y + n.dz][x + n.dx] === CELL.WALL && Math.random() < 0.12) {
+              const wp = cellToWorld(x, y, grid);
+              const pos = new THREE.Vector3(wp.x + n.dx * 0.45, 1.4, wp.z + n.dz * 0.45);
+              const torch = spawnTorch(this.scene, pos);
+              torch.rotation.y = n.rot;
+              this.props.push(torch);
+              break; 
+            }
+          }
+        }
+      }
+    }
   }
 
   // Return only the wall meshes in a 3x3 cell area around world (x,z) — fast collision.
@@ -305,13 +354,15 @@ export class World {
 
   setTheme(themeName) {
     let wallTex, floorTex, ceilTex, wallColor, floorColor, skyColor, fogColor;
+    const isNatura = themeName === 'natura';
+    
     switch (themeName) {
       case 'natura':
         wallTex = this.textures.garden.wall;
         floorTex = this.textures.garden.floor;
         ceilTex = this.textures.garden.ceil;
         wallColor = 0x2a4d1a; floorColor = 0x1a3d0a;
-        skyColor = 0x87ceeb; // Sky Blue
+        skyColor = 0x87ceeb; 
         fogColor = 0x87ceeb;
         break;
       case 'mattoni':
@@ -322,7 +373,7 @@ export class World {
         skyColor = 0x1a0a05;
         fogColor = 0x1a0a05;
         break;
-      default: // pietra (dungeon)
+      default: // pietra
         wallTex = this.textures.dungeon.wall;
         floorTex = this.textures.dungeon.floor;
         ceilTex = this.textures.dungeon.ceil;
@@ -340,16 +391,38 @@ export class World {
           obj.material.map = wallTex;
           obj.material.color.setHex(wallColor);
           obj.material.needsUpdate = true;
+          // Shorter walls for Natura (hedges)
+          if (obj.isInstancedMesh) {
+            const h = isNatura ? 2.5 : 3.0;
+            const dummy = new THREE.Object3D();
+            for(let i=0; i<obj.count; i++) {
+              obj.getMatrixAt(i, dummy.matrix);
+              dummy.matrix.decompose(dummy.position, dummy.quaternion, dummy.scale);
+              dummy.scale.y = h / 3.0; 
+              dummy.position.y = h / 2;
+              dummy.updateMatrix();
+              obj.setMatrixAt(i, dummy.matrix);
+            }
+            obj.instanceMatrix.needsUpdate = true;
+          }
         }
-        // Floor and Ceiling update
         if (obj.geometry.type === 'PlaneGeometry' && obj.material && !obj.userData.isDoor && !obj.isSky) {
           const isCeil = obj.position.y > 2;
+          // Hide ceiling in Natura theme
+          if (isCeil) obj.visible = !isNatura;
           obj.material.map = isCeil ? ceilTex : floorTex;
           obj.material.color.setHex(isCeil ? 0x888888 : floorColor);
           obj.material.needsUpdate = true;
         }
       }
     });
+  }
+
+  setDayNight(isDay) {
+    if (this.sun) this.sun.visible = isDay;
+    if (this.clouds) this.clouds.visible = isDay;
+    if (this.moon) this.moon.visible = !isDay;
+    if (this.stars) this.stars.visible = !isDay;
   }
 
   // Update animations (doors opening)
