@@ -31,46 +31,19 @@ export function dungeonWallTexture() {
 }
 
 export function gardenWallTexture() {
-  const { c, ctx } = makeCanvas(256);
-  ctx.fillStyle = '#1a3a0a'; ctx.fillRect(0, 0, 256, 256);
-  // Dense leaves
-  for (let i = 0; i < 1200; i++) {
-    const x = Math.random() * 256;
-    const y = Math.random() * 256;
-    const v = 40 + Math.random() * 40;
-    ctx.fillStyle = `rgb(${v * 0.4 | 0},${v | 0},${v * 0.2 | 0})`;
-    ctx.beginPath();
-    ctx.ellipse(x, y, 3 + Math.random() * 6, 2 + Math.random() * 3, Math.random() * Math.PI, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  // Flowers
-  for (let i = 0; i < 20; i++) {
-    ctx.fillStyle = ['#ff4080', '#ffcc00', '#ffffff'][Math.floor(Math.random() * 3)];
-    ctx.beginPath();
-    ctx.arc(Math.random() * 256, Math.random() * 256, 2, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  return finalize(c, { repeat: 1 });
+  const tex = loader.load('/textures/maze/hedge_wall.png');
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(1, 1);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
 }
 
 export function catacombsWallTexture() {
-  const { c, ctx } = makeCanvas(256);
-  ctx.fillStyle = '#1a100a'; ctx.fillRect(0, 0, 256, 256); // Mortar
-  const bh = 32, bw = 64;
-  for (let y = 0; y < 256; y += bh) {
-    const offset = (y / bh % 2) * (bw / 2);
-    for (let x = -bw; x < 256; x += bw) {
-      const rx = x + offset;
-      const v = 70 + Math.random() * 40;
-      ctx.fillStyle = `rgb(${v},${v * 0.6 | 0},${v * 0.4 | 0})`;
-      ctx.fillRect(rx + 2, y + 2, bw - 4, bh - 4);
-      // Highlights
-      ctx.fillStyle = 'rgba(255,255,255,0.05)';
-      ctx.fillRect(rx + 2, y + 2, bw - 4, 3);
-    }
-  }
-  addNoise(ctx, 256, 15);
-  return finalize(c, { repeat: 1 });
+  const tex = loader.load('/textures/maze/brick_wall.png');
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(1, 1);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
 }
 
 export function genericCeilingTexture() {
