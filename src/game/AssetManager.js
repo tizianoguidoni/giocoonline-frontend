@@ -144,7 +144,8 @@ export class AssetManager {
   getSwordModel() {
     if (!this.models.sword) return null;
     const model = this.models.sword.clone();
-    model.scale.set(0.001, 0.001, 0.001); 
+    // Default scale for the sword FBX
+    model.scale.set(0.015, 0.015, 0.015); 
     return model;
   }
 

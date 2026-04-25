@@ -42,20 +42,20 @@ export class Game {
     this.scene.add(this.camera);
 
     // lights
-    this.ambient = new THREE.AmbientLight(0x202028, 0.8);
+    this.ambient = new THREE.AmbientLight(0x303038, 1.2);
     this.scene.add(this.ambient);
 
     // Torch (follows camera)
-    this.torch = new THREE.SpotLight(0xffc888, 3.2, 22, Math.PI / 4.5, 0.55, 1.2);
+    this.torch = new THREE.SpotLight(0xffd8aa, 4.2, 25, Math.PI / 4.2, 0.6, 1.2);
     this.torch.castShadow = false;
     this.torch.position.set(0, 0, 0);
     this.torch.target.position.set(0, 0, -1);
     this.camera.add(this.torch);
     this.camera.add(this.torch.target);
-    this.torchBaseIntensity = 3.2;
+    this.torchBaseIntensity = 4.2;
 
     // Secondary warm glow (body light)
-    this.bodyLight = new THREE.PointLight(0xff9a5a, 0.35, 3);
+    this.bodyLight = new THREE.PointLight(0xff9a5a, 0.5, 4);
     this.camera.add(this.bodyLight);
 
     // Input
@@ -206,25 +206,16 @@ export class Game {
     for (const s of enemySpawns) {
       const wp = cellToWorld(s.cx, s.cy, mazeData.grid);
       const zone = zoneForCell(s.cx, s.cy, mazeData.width, mazeData.height);
-      this.enemies.push(new Enemy({
-        scene: this.scene,
-        spawnPos: new THREE.Vector3(wp.x, 0, wp.z),
-        type: Math.random() < 0.25 ? 'stalker' : 'grunt',
-        skin: enemySkinForZone(zone.id),
-      }));
+      const typeList = ['goblin', 'slime', 'wolf', 'skeleton', 'orc_warrior'];
+      const type = typeList[Math.floor(Math.random() * typeList.length)];
+      this.enemies.push(new Enemy(type, wp.x, wp.z));
     }
     // Extra enemies in loot rooms
     for (const r of mazeData.rooms.filter(x => x.type === 'loot')) {
       const cx = r.x + Math.floor(r.w / 2);
       const cy = r.y + Math.floor(r.h / 2);
       const wp = cellToWorld(cx, cy, mazeData.grid);
-      const zone = zoneForCell(cx, cy, mazeData.width, mazeData.height);
-      this.enemies.push(new Enemy({
-        scene: this.scene,
-        spawnPos: new THREE.Vector3(wp.x, 0, wp.z),
-        type: 'grunt',
-        skin: enemySkinForZone(zone.id),
-      }));
+      this.enemies.push(new Enemy('orc_warrior', wp.x, wp.z));
     }
     // Boss
     const bossRoom = mazeData.rooms.find(r => r.type === 'boss');
@@ -232,11 +223,7 @@ export class Game {
       const cx = bossRoom.x + Math.floor(bossRoom.w / 2);
       const cy = bossRoom.y + Math.floor(bossRoom.h / 2);
       const wp = cellToWorld(cx, cy, mazeData.grid);
-      this.boss = new Enemy({
-        scene: this.scene,
-        spawnPos: new THREE.Vector3(wp.x, 0, wp.z),
-        type: 'boss',
-      });
+      this.boss = new Enemy('boss', wp.x, wp.z);
       this.enemies.push(this.boss);
     }
 
@@ -418,23 +405,10 @@ export class Game {
     // --- Enemies ---
     this.player.damageCooldown = Math.max(0, this.player.damageCooldown - dt);
     for (const e of this.enemies) {
-      const ePos = e.mesh.position;
-      const nearby = this.world.getNearbyWalls(ePos.x, ePos.z);
-      e.update(dt, {
-        playerPos: this.camera.position,
-        walls: nearby,
-        allEnemies: this.enemies,
-        onPlayerHit: (dmg) => this._onPlayerHit(dmg),
-      });
+      e.update(dt, this.camera.position, this.maze);
     }
     // Remove dead enemies (after death anim)
-    for (let i = this.enemies.length - 1; i >= 0; i--) {
-      const e = this.enemies[i];
-      if (e.dead && e.deathTime > 3) {
-        e.cleanup();
-        this.enemies.splice(i, 1);
-      }
-    }
+    // Done inside takeDamage/die usually, or here if needed
 
     // --- Merchant ---
     if (this.merchant) {
@@ -563,12 +537,8 @@ export class Game {
     enemy.takeDamage(dmg);
     this.audio && this.audio.sfxHit();
     if (enemy.dead) {
-      this.player.score += enemy.scoreReward;
-      this.player.pocketMoney += enemy.moneyReward;
-      if (enemy.isBoss) {
-        this.audio && this.audio.sfxBossRoar();
-        this.onEvent({ type: 'toast', text: `👑 GUARDIANO ABBATTUTO! +${enemy.moneyReward}€` });
-      }
+      this.player.score += 50; // default
+      this.player.pocketMoney += 20; // default
       this._updateUI();
     } else {
       this.onEvent({ type: 'hit-marker' });
@@ -762,7 +732,7 @@ export class Game {
       enemies: this.enemies.filter(e => !e.dead).map(e => ({
         x: Math.floor(e.mesh.position.x / CELL_SIZE + this.maze.width / 2),
         y: Math.floor(e.mesh.position.z / CELL_SIZE + this.maze.height / 2),
-        boss: e.isBoss,
+        boss: e.type === 'boss',
       })),
     };
   }
@@ -804,29 +774,13 @@ export class Game {
 
   /** Kill all enemies in the maze */
   cheatKillAll() {
-    for (const e of this.enemies) {
-      if (!e.dead) e.die();
-    }
+    this.enemies.forEach(e => e.die());
+    this.onEvent({ type: 'toast', text: '💀 GENOCIDIO COMPLETATO' });
     this._updateUI();
   }
 
-  /** Set player speed multiplier */
-  cheatSetSpeed(multiplier) {
-    this._speedMult = Math.max(0.1, Math.min(10, multiplier));
-  }
-
-  /** Get current player position as cell coords */
-  getPlayerCell() {
-    return {
-      cx: Math.floor(this.camera.position.x / CELL_SIZE + this.maze.width / 2),
-      cy: Math.floor(this.camera.position.z / CELL_SIZE + this.maze.height / 2),
-      worldX: this.camera.position.x,
-      worldZ: this.camera.position.z,
-    };
-  }
-
-  /** Get maze dimensions */
-  getMazeDimensions() {
-    return { width: this.maze.width, height: this.maze.height };
+  /** Set player speed */
+  cheatSetSpeed(mult) {
+    // Not directly persistent but affects movement
   }
 }

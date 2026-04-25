@@ -166,7 +166,7 @@ export function buildViewmodelFor(weaponId) {
       const fbxModel = assetManager.getSwordModel();
       if (fbxModel) {
         fbxModel.rotation.set(0, -Math.PI/2, 0.45);
-        fbxModel.scale.setScalar(0.0015);
+        fbxModel.scale.setScalar(0.025); // Increased scale
         fbxModel.position.set(0, 0.2, 0);
         group.add(fbxModel);
       } else {
@@ -179,7 +179,7 @@ export function buildViewmodelFor(weaponId) {
       const fbxModel = assetManager.getSwordModel();
       if (fbxModel) {
         fbxModel.rotation.set(0, -Math.PI/2, 0.45);
-        fbxModel.scale.setScalar(0.0015);
+        fbxModel.scale.setScalar(0.02); // Increased scale
         fbxModel.position.set(0, 0.2, 0);
         group.add(fbxModel);
       } else {
@@ -207,6 +207,12 @@ export class WeaponSystem {
     this.viewmodelHolder = new THREE.Group();
     this.viewmodelHolder.position.set(0.4, -0.4, -0.5);
     this.viewmodelHolder.rotation.y = -0.25;
+    
+    // Dedicated light for weapon viewmodel
+    const wLight = new THREE.PointLight(0xffffff, 1.2, 3);
+    wLight.position.set(0.5, 0.5, 0.5);
+    this.viewmodelHolder.add(wLight);
+
     this.camera.add(this.viewmodelHolder);
     this._rebuildViewmodel();
   }
@@ -214,8 +220,14 @@ export class WeaponSystem {
   _rebuildViewmodel() {
     while (this.viewmodelHolder.children.length) {
       const c = this.viewmodelHolder.children[0];
+      // Keep the light!
+      if (c.isPointLight) break;
       this.viewmodelHolder.remove(c);
     }
+    // ensure we don't remove light in a loop if it's first
+    const children = [...this.viewmodelHolder.children];
+    children.forEach(c => { if (!c.isPointLight) this.viewmodelHolder.remove(c); });
+
     this.viewmodel = buildViewmodelFor(this.current);
     this.viewmodel.scale.setScalar(0.5);
     this.viewmodelHolder.add(this.viewmodel);
