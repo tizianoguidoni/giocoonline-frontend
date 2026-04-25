@@ -165,7 +165,7 @@ export function buildViewmodelFor(weaponId) {
       const group = new THREE.Group();
       const fbxModel = assetManager.getSwordModel();
       if (fbxModel) {
-        fbxModel.rotation.set(0, -Math.PI/2, 0.45);
+        fbxModel.rotation.set(0, Math.PI/2, 0.45);
         fbxModel.scale.setScalar(0.025); // Increased scale
         fbxModel.position.set(0, 0.2, 0);
         group.add(fbxModel);
@@ -178,7 +178,7 @@ export function buildViewmodelFor(weaponId) {
       const group = new THREE.Group();
       const fbxModel = assetManager.getSwordModel();
       if (fbxModel) {
-        fbxModel.rotation.set(0, -Math.PI/2, 0.45);
+        fbxModel.rotation.set(0, Math.PI/2, 0.45);
         fbxModel.scale.setScalar(0.02); // Increased scale
         fbxModel.position.set(0, 0.2, 0);
         group.add(fbxModel);

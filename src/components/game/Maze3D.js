@@ -112,8 +112,11 @@ export default function Maze3D({ onExit }) {
       const isPaused = showExitConfirm || adminOpen;
       gameRef.current.setPaused(isPaused);
       
-      // If we just closed the admin panel, re-request pointer lock
-      if (!isPaused && !showExitConfirm && !adminOpen) {
+      if (isPaused && document.pointerLockElement) {
+        document.exitPointerLock();
+      }
+
+      if (!isPaused) {
         setTimeout(() => {
           if (!document.pointerLockElement && gameRef.current) {
             gameRef.current.requestPointerLock();
