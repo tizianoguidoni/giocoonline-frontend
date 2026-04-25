@@ -221,6 +221,11 @@ export class Game {
       this.scene.add(enemy.mesh);
     }
     // Boss
+    const bossRoom = mazeData.rooms.find(r => r.type === 'boss');
+    if (bossRoom) {
+      const cx = bossRoom.x + Math.floor(bossRoom.w / 2);
+      const cy = bossRoom.y + Math.floor(bossRoom.h / 2);
+      const wp = cellToWorld(cx, cy, mazeData.grid);
       this.boss = new Enemy('boss', wp.x, wp.z);
       this.enemies.push(this.boss);
       this.scene.add(this.boss.mesh);
