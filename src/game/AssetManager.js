@@ -26,17 +26,19 @@ export class AssetManager {
     console.log('Starting asset load...');
     try {
       // 1. Load the actual models
-      const [bossModel, swordModel, characterModel, goblinModel] = await Promise.all([
+      const [bossModel, swordModel, characterModel, goblinModel, gruntModel] = await Promise.all([
         this.loadFBX('/models/boss.fbx'),
         this.loadFBX('/models/sword.fbx'),
         this.loadFBX('/models/character.fbx'),
-        this.loadFBX('/models/goblin.fbx')
+        this.loadFBX('/models/goblin.fbx'),
+        this.loadFBX('/models/grunt.fbx')
       ]);
 
       this.models.boss = bossModel;
       this.models.sword = swordModel;
       this.models.character = characterModel;
       this.models.goblin = goblinModel;
+      this.models.grunt = gruntModel;
 
       // 2. Load textures for variations
       // Boss textures
@@ -174,6 +176,23 @@ export class AssetManager {
      const model = this.models.goblin.clone();
      model.scale.set(0.01, 0.01, 0.01);
      return model;
+  }
+
+  getGruntModel() {
+     const source = this.models.grunt || this.models.goblin;
+     if (!source) return null;
+     const model = source.clone();
+     model.scale.set(0.012, 0.012, 0.012);
+     return model;
+  }
+
+  getBossModel() {
+     return this.getBossVariant(0);
+  }
+
+  getAnimations(modelKey) {
+     const model = this.models[modelKey];
+     return model ? model.animations : [];
   }
 }
 
