@@ -4,7 +4,8 @@ import {
   Skull, Settings, Users, Shield, 
   Map, Coins, Swords, Trash2, 
   UserMinus, MessageSquareOff, Eye,
-  CloudRain, Sun, Moon, Palette, Terminal
+  CloudRain, Sun, Moon, Palette, Terminal,
+  Heart, Crown
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL ? `${process.env.REACT_APP_BACKEND_URL}/api` : '/api';
@@ -351,11 +352,5 @@ export function AdminPanelUI({ role, game, onClose }) {
         </div>
       </div>
     </div>
-  );
-}
-
-function Crown({ className }) {
-  return (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>
   );
 }

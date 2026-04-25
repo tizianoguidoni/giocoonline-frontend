@@ -443,7 +443,7 @@ export default function GamePage() {
                       if (results && results.gold > 0) {
                         try {
                           const token = localStorage.getItem('token');
-                          const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+                          const baseUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
                           await axios.post(`${baseUrl}/api/combat/maze-win`, { gold: results.gold }, {
                             headers: { Authorization: `Bearer ${token}` }
                           });
