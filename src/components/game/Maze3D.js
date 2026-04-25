@@ -118,7 +118,7 @@ export default function Maze3D({ onExit }) {
           if (!document.pointerLockElement && gameRef.current) {
             gameRef.current.requestPointerLock();
           }
-        }, 150);
+        }, 300);
       }
     }
   }, [showExitConfirm, adminOpen]);

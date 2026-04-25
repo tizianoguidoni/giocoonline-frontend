@@ -142,7 +142,14 @@ export function generateMaze({ width = 31, height = 31, roomCount = 5 } = {}) {
   const exitCell = { x: width - 2, y: height - 2 };
   grid[exitCell.y][exitCell.x] = CELL.FLOOR;
 
-  return { grid, rooms, startCell, exitCell, width, height };
+  const mazeObj = { grid, rooms, startCell, exitCell, width, height };
+  mazeObj.isWall = (wx, wz) => {
+    const cx = Math.round(wx / CELL_SIZE + width / 2);
+    const cy = Math.round(wz / CELL_SIZE + height / 2);
+    if (cx < 0 || cy < 0 || cx >= width || cy >= height) return true;
+    return grid[cy][cx] !== CELL.FLOOR;
+  };
+  return mazeObj;
 }
 
 // World helpers (cells <-> world position)
