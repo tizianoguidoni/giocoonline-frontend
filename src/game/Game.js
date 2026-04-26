@@ -272,6 +272,8 @@ export class Game {
 
   _bindEvents() {
     this._onKeyDown = (e) => {
+      if (this.paused) return;
+      if (document.activeElement && ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
       this.keys[e.code] = true;
       if (e.code === 'KeyR') this.weapons.tryReload();
       if (e.code === 'KeyE') this._tryInteract();
@@ -287,7 +289,10 @@ export class Game {
       if (e.code === 'Escape') this._unlockPointer();
       this._updateUI();
     };
-    this._onKeyUp = (e) => { this.keys[e.code] = false; };
+    this._onKeyUp = (e) => { 
+      if (document.activeElement && ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+      this.keys[e.code] = false; 
+    };
     this._onMouseMove = (e) => {
       if (document.pointerLockElement !== this.canvas) return;
       const sens = 0.0022;
@@ -343,7 +348,10 @@ export class Game {
     this._unbindEvents();
     this.renderer.dispose();
   }
-  setPaused(p) { this.paused = p; }
+  setPaused(p) { 
+    this.paused = p; 
+    if (p) this.keys = {}; // Clear stuck keys when pausing
+  }
 
   _loop = () => {
     if (!this.running) return;
