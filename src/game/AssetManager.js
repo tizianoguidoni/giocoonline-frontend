@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
+import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils';
 
 // We try to import fflate for compressed FBX support
 let fflate;
@@ -119,7 +120,7 @@ export class AssetManager {
 
   getBossVariant(type = 0) {
     if (!this.models.boss) return null;
-    const group = this.models.boss.clone();
+    const group = SkeletonUtils.clone(this.models.boss);
     const elements = ['fire', 'ice', 'earth'];
     const element = elements[type % 3];
     const tex = this.textures.boss[element];
@@ -145,7 +146,7 @@ export class AssetManager {
 
   getSwordModel() {
     if (!this.models.sword) return null;
-    const model = this.models.sword.clone();
+    const model = SkeletonUtils.clone(this.models.sword);
     // Default scale for the sword FBX
     model.scale.set(0.015, 0.015, 0.015); 
     return model;
@@ -153,7 +154,7 @@ export class AssetManager {
 
   getCharacterModel() {
      if (!this.models.character) return null;
-     const model = this.models.character.clone();
+     const model = SkeletonUtils.clone(this.models.character);
      model.scale.set(0.012, 0.012, 0.012); 
 
      if (this.textures.character && this.textures.character.diffuse) {
@@ -173,7 +174,7 @@ export class AssetManager {
 
   getGoblinModel() {
      if (!this.models.goblin) return null;
-     const model = this.models.goblin.clone();
+     const model = SkeletonUtils.clone(this.models.goblin);
      model.scale.set(0.01, 0.01, 0.01);
      return model;
   }
@@ -181,7 +182,7 @@ export class AssetManager {
   getGruntModel() {
      const source = this.models.grunt || this.models.goblin;
      if (!source) return null;
-     const model = source.clone();
+     const model = SkeletonUtils.clone(source);
      model.scale.set(0.012, 0.012, 0.012);
      return model;
   }

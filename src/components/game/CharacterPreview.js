@@ -26,23 +26,88 @@ export function CharacterPreview({ equipment = {}, className = "", style = {} })
     renderer.setClearColor(0x000000, 0); // Transparent background
     currentRef.appendChild(renderer.domElement);
     
-    // Premium Lighting (Gold/Purple highlights)
-    const ambLight = new THREE.AmbientLight(0xffffff, 0.4);
+    // RARITY COLORS MAP
+    const RARITY_COLORS = {
+      common: 0x9ca3af,
+      uncommon: 0x22c55e,
+      rare: 0x3b82f6,
+      epic: 0xa855f7,
+      legendary: 0xd4af37,
+      admin: 0xe63946
+    };
+
+    // Determine highest rarity color
+    let mainColor = RARITY_COLORS.common;
+    const rarities = [equipment.sword?.rarity, equipment.helmet?.rarity, equipment.shield?.rarity].filter(Boolean);
+    if (rarities.includes('admin')) mainColor = RARITY_COLORS.admin;
+    else if (rarities.includes('legendary')) mainColor = RARITY_COLORS.legendary;
+    else if (rarities.includes('epic')) mainColor = RARITY_COLORS.epic;
+    else if (rarities.includes('rare')) mainColor = RARITY_COLORS.rare;
+    else if (rarities.includes('uncommon')) mainColor = RARITY_COLORS.uncommon;
+
+    // Premium Lighting
+    const ambLight = new THREE.AmbientLight(0xffffff, 0.3);
     scene.add(ambLight);
     
-    const dirLight = new THREE.DirectionalLight(0xd4af37, 1.5); // Gold light
-    dirLight.position.set(5, 5, 2);
+    const dirLight = new THREE.DirectionalLight(mainColor, 2.0); 
+    dirLight.position.set(5, 8, 4);
     scene.add(dirLight);
 
-    const rimLight = new THREE.PointLight(0x7b2cbf, 2, 10); // Purple rim
-    rimLight.position.set(-3, 2, -3);
+    const rimLight = new THREE.PointLight(0x7b2cbf, 5, 10); // Intense Purple rim
+    rimLight.position.set(-3, 3, -4);
     scene.add(rimLight);
+    
+    const floorLight = new THREE.PointLight(mainColor, 3, 5); 
+    floorLight.position.set(0, -1.5, 0);
+    scene.add(floorLight);
 
-    // Character Group
+    // Character Group & Pedestal
+    const mainGroup = new THREE.Group();
+    scene.add(mainGroup);
+    
+    // Magic glowing pedestal
+    const pedestalGeo = new THREE.CylinderGeometry(1.2, 1.5, 0.1, 32);
+    const pedestalMat = new THREE.MeshStandardMaterial({ 
+      color: 0x1a1525, 
+      metalness: 0.8, 
+      roughness: 0.2,
+      emissive: mainColor,
+      emissiveIntensity: 0.2
+    });
+    const pedestal = new THREE.Mesh(pedestalGeo, pedestalMat);
+    pedestal.position.y = -1.2;
+    mainGroup.add(pedestal);
+
+    const ringGeo = new THREE.TorusGeometry(1.2, 0.02, 16, 64);
+    const ringMat = new THREE.MeshBasicMaterial({ color: mainColor });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.position.y = -1.15;
+    ring.rotation.x = Math.PI / 2;
+    mainGroup.add(ring);
+
+    // Particle Effects
+    const particleCount = 50;
+    const particlesGeo = new THREE.BufferGeometry();
+    const posArray = new Float32Array(particleCount * 3);
+    for(let i = 0; i < particleCount * 3; i++) {
+      posArray[i] = (Math.random() - 0.5) * 3;
+    }
+    particlesGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+    const particlesMat = new THREE.PointsMaterial({
+      size: 0.03,
+      color: mainColor,
+      transparent: true,
+      opacity: 0.8,
+      blending: THREE.AdditiveBlending
+    });
+    const particleMesh = new THREE.Points(particlesGeo, particlesMat);
+    mainGroup.add(particleMesh);
+
     const charGroup = new THREE.Group();
-    scene.add(charGroup);
+    mainGroup.add(charGroup);
     
     let charModel, mixer, sword;
+    let animatedItems = []; // To store items for scale-up animation
 
     if (assetManager.isLoaded && assetManager.getCharacterModel) {
       charModel = assetManager.getCharacterModel();
@@ -60,7 +125,8 @@ export function CharacterPreview({ equipment = {}, className = "", style = {} })
           if (wId === 'shortsword' || wId === 'soulblade') {
             sword = assetManager.getSwordModel();
             if (sword) {
-              sword.scale.setScalar(0.015);
+              sword.scale.setScalar(0.001); // Start small for animation
+              animatedItems.push({ mesh: sword, targetScale: 0.015 });
               const rHand = charModel.getObjectByName('RightHand') || charModel.getObjectByName('hand_r');
               if (rHand) {
                   rHand.add(sword);
@@ -73,19 +139,22 @@ export function CharacterPreview({ equipment = {}, className = "", style = {} })
           } else {
             const fallBackWeapon = buildViewmodelFor(wId);
             if (fallBackWeapon) {
-              fallBackWeapon.scale.setScalar(0.5);
+              fallBackWeapon.scale.setScalar(0.001);
+              animatedItems.push({ mesh: fallBackWeapon, targetScale: 0.5 });
               fallBackWeapon.position.set(0.4, 0.8, 0.5);
               charModel.add(fallBackWeapon);
             }
           }
         }
 
-        // Helmet placeholder (Crown if legendary, etc.)
+        // Helmet placeholder
         const hId = equipment.helmet?.item_id || equipment.helmet?.id;
         if (hId) {
           const headBone = charModel.getObjectByName('Head') || charModel.getObjectByName('head');
           const helmMat = new THREE.MeshStandardMaterial({ color: equipment.helmet?.rarity === 'legendary' ? 0xd4af37 : 0xaaaaaa, metalness: 0.8, roughness: 0.2 });
           const helmMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.15, 16), helmMat);
+          helmMesh.scale.setScalar(0.001);
+          animatedItems.push({ mesh: helmMesh, targetScale: 1.0 });
           if (headBone) {
             headBone.add(helmMesh);
             helmMesh.position.y += 0.1;
@@ -99,8 +168,10 @@ export function CharacterPreview({ equipment = {}, className = "", style = {} })
         const sId = equipment.shield?.item_id || equipment.shield?.id;
         if (sId) {
           const lHand = charModel.getObjectByName('LeftHand') || charModel.getObjectByName('hand_l');
-          const shieldMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, metalness: 0.5, roughness: 0.5 });
+          const shieldMat = new THREE.MeshStandardMaterial({ color: mainColor, metalness: 0.5, roughness: 0.5 });
           const shieldMesh = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.6, 0.05), shieldMat);
+          shieldMesh.scale.setScalar(0.001);
+          animatedItems.push({ mesh: shieldMesh, targetScale: 1.0 });
           if (lHand) {
             lHand.add(shieldMesh);
           } else {
@@ -114,30 +185,121 @@ export function CharacterPreview({ equipment = {}, className = "", style = {} })
       }
     } 
     
-    // Fallback if no assetManager or model fails
+    // Fallback if no assetManager or model fails (Premium Mannequin)
     if (charGroup.children.length === 0) {
-      const skinMat = new THREE.MeshStandardMaterial({ color: 0xe0ac69, roughness: 0.6 });
-      const clothesMat = new THREE.MeshStandardMaterial({ color: 0x2d283e, roughness: 0.9 });
+      // Crystal / Dark Magic material
+      const bodyMat = new THREE.MeshPhysicalMaterial({ 
+        color: 0x1a1525, 
+        metalness: 0.9, 
+        roughness: 0.1,
+        clearcoat: 1.0,
+        clearcoatRoughness: 0.1,
+        emissive: 0x3a1555,
+        emissiveIntensity: 0.2
+      });
       
-      const torso = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.25), clothesMat);
-      torso.position.y = 1.05;
-      const head = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, 0.25), skinMat);
+      const jointMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 1, roughness: 0.2 });
+      
+      // Torso
+      const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.25, 0.4, 4, 16), bodyMat);
+      torso.position.y = 0.9;
+      
+      // Head
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.18, 32, 32), bodyMat);
       head.position.y = 1.6;
       
-      charGroup.add(torso, head);
+      // Neck ring
+      const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.1, 16), jointMat);
+      neck.position.y = 1.4;
+
+      // Arms
+      const armL = new THREE.Mesh(new THREE.CapsuleGeometry(0.08, 0.4, 4, 16), bodyMat);
+      armL.position.set(0.4, 0.8, 0);
+      armL.rotation.z = Math.PI / 8;
+      
+      const armR = new THREE.Mesh(new THREE.CapsuleGeometry(0.08, 0.4, 4, 16), bodyMat);
+      armR.position.set(-0.4, 0.8, 0);
+      armR.rotation.z = -Math.PI / 8;
+
+      // Floating spheres for hands
+      const handL = new THREE.Mesh(new THREE.SphereGeometry(0.06, 16, 16), jointMat);
+      handL.position.set(0.55, 0.4, 0);
+      const handR = new THREE.Mesh(new THREE.SphereGeometry(0.06, 16, 16), jointMat);
+      handR.position.set(-0.55, 0.4, 0);
+
+      // Legs
+      const legL = new THREE.Mesh(new THREE.CapsuleGeometry(0.1, 0.5, 4, 16), bodyMat);
+      legL.position.set(0.15, 0.25, 0);
+      const legR = new THREE.Mesh(new THREE.CapsuleGeometry(0.1, 0.5, 4, 16), bodyMat);
+      legR.position.set(-0.15, 0.25, 0);
+
+      charGroup.add(torso, head, neck, armL, armR, handL, handR, legL, legR);
       charGroup.position.y = -0.5;
+
+      // Re-apply equipment visuals to procedural mesh
+      const wId = equipment.sword?.item_id || equipment.sword?.id;
+      if (wId) {
+        const fallBackWeapon = buildViewmodelFor(wId);
+        if (fallBackWeapon) {
+          fallBackWeapon.scale.setScalar(0.001);
+          animatedItems.push({ mesh: fallBackWeapon, targetScale: 0.5 });
+          fallBackWeapon.position.set(0.55, 0.4, 0.3); // In right hand
+          fallBackWeapon.rotation.set(Math.PI/2, 0, 0);
+          charGroup.add(fallBackWeapon);
+        }
+      }
+
+      const hId = equipment.helmet?.item_id || equipment.helmet?.id;
+      if (hId) {
+        const helmMat = new THREE.MeshStandardMaterial({ color: equipment.helmet?.rarity === 'legendary' ? 0xd4af37 : 0xaaaaaa, metalness: 0.9, roughness: 0.1 });
+        const helmMesh = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.05, 16, 32), helmMat);
+        helmMesh.scale.setScalar(0.001);
+        animatedItems.push({ mesh: helmMesh, targetScale: 1.0 });
+        helmMesh.rotation.x = Math.PI / 2;
+        helmMesh.position.set(0, 1.8, 0); // Halo above head
+        charGroup.add(helmMesh);
+      }
+
+      const sId = equipment.shield?.item_id || equipment.shield?.id;
+      if (sId) {
+        const shieldMat = new THREE.MeshPhysicalMaterial({ color: mainColor, metalness: 0.8, roughness: 0.2, transmission: 0.5, thickness: 0.1 });
+        const shieldMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.05, 32), shieldMat);
+        shieldMesh.scale.setScalar(0.001);
+        animatedItems.push({ mesh: shieldMesh, targetScale: 1.0 });
+        shieldMesh.rotation.x = Math.PI / 2;
+        shieldMesh.position.set(-0.55, 0.4, 0.2); // On left arm
+        charGroup.add(shieldMesh);
+      }
     }
     
-    // Subtle rotation
+    // Subtle rotation and floating animation
     let frameId;
     const clock = new THREE.Clock();
     const animate = () => {
       frameId = requestAnimationFrame(animate);
       const delta = clock.getDelta();
+      const time = clock.elapsedTime;
       if (mixer) mixer.update(delta);
       
-      // Slowly rotate character
-      charGroup.rotation.y = Math.sin(clock.elapsedTime * 0.5) * 0.2;
+      // Animate equipment pop-in
+      animatedItems.forEach(item => {
+        if (item.mesh.scale.x < item.targetScale) {
+          const newScale = Math.min(item.targetScale, item.mesh.scale.x + delta * 2.0);
+          item.mesh.scale.setScalar(newScale);
+        }
+      });
+
+      
+      // Floating pedestal ring and particles
+      ring.rotation.z = time * 0.5;
+      ring.scale.setScalar(1 + Math.sin(time * 2) * 0.05);
+      
+      particleMesh.rotation.y = time * 0.1;
+      particleMesh.position.y = Math.sin(time * 0.5) * 0.2;
+
+      // Slowly rotate and float character
+      charGroup.rotation.y = Math.sin(time * 0.5) * 0.2;
+      charGroup.position.y = Math.sin(time * 1.5) * 0.05; // Hovering
       
       renderer.render(scene, camera);
     };

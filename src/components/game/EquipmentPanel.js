@@ -1,26 +1,19 @@
-import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useGame } from '@/context/GameContext';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import axios from 'axios';
-import { 
-  Shield, Sword, Crown, Crosshair, 
-  Package, Star, X, ChevronRight, Sparkles
-} from 'lucide-react';
-import { getItemImage } from '@/data/itemImages';
+import { Sparkles, Shield, Sword, Crown, Crosshair } from 'lucide-react';
 import { CharacterPreview } from './CharacterPreview';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL ? `${process.env.REACT_APP_BACKEND_URL}/api` : '/api';
 
-// 4 Slot specifici richiesti dal gioco
 const EQUIPMENT_SLOTS = [
-  { id: 'helmet', name: 'Elmo', icon: Crown, position: 'top' },
-  { id: 'sword', name: 'Spada', icon: Sword, position: 'left' },
-  { id: 'secondary', name: 'Colpo', icon: Crosshair, position: 'right' },
-  { id: 'shield', name: 'Scudo', icon: Shield, position: 'bottom' }
+  { id: 'helmet', name: 'Elmo', icon: Crown },
+  { id: 'sword', name: 'Spada', icon: Sword },
+  { id: 'shield', name: 'Scudo', icon: Shield },
+  { id: 'secondary', name: 'Accessorio', icon: Crosshair }
 ];
 
 const RARITY_COLORS = {
@@ -33,11 +26,11 @@ const RARITY_COLORS = {
 };
 
 export default function EquipmentPanel() {
-  const { t } = useTranslation();
   const { character, refreshCharacter } = useAuth();
   const { inventory, fetchInventory } = useGame();
   const [equipment, setEquipment] = useState({});
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [selectedInventoryItem, setSelectedInventoryItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [equipping, setEquipping] = useState(false);
 
@@ -60,15 +53,12 @@ export default function EquipmentPanel() {
   const handleEquip = async (itemId, slot) => {
     setEquipping(true);
     try {
-      await axios.post(`${API}/equipment/equip`, {
-        item_id: itemId,
-        slot: slot
-      });
+      await axios.post(`${API}/equipment/equip`, { item_id: itemId, slot });
       toast.success('Oggetto equipaggiato!');
       await fetchEquipment();
       await fetchInventory();
       await refreshCharacter();
-      setSelectedSlot(null);
+      setSelectedInventoryItem(null);
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Errore nell\'equipaggiamento');
     } finally {
@@ -91,271 +81,183 @@ export default function EquipmentPanel() {
     }
   };
 
-  // Get items that can be equipped in selected slot
-  const getItemsForSlot = (slot) => {
-    return inventory.filter(item => item.slot === slot && !item.equipped);
-  };
-
-  // Calculate total stats from equipment
-  const getTotalStats = () => {
-    const stats = {};
-    Object.values(equipment).forEach(item => {
-      if (item?.stats) {
-        Object.entries(item.stats).forEach(([stat, val]) => {
-          stats[stat] = (stats[stat] || 0) + val;
-        });
-      }
-    });
-    return stats;
-  };
-
-  const totalStats = getTotalStats();
+  const equipableItems = inventory ? inventory.filter(item => !item.equipped && ['sword','shield','helmet','secondary'].includes(item.slot)) : [];
+  
+  // Calculate total stats
+  const totalStats = {};
+  Object.values(equipment).forEach(item => {
+    if (!item) return;
+    if (item.stats) {
+      Object.entries(item.stats).forEach(([k, v]) => {
+        totalStats[k] = (totalStats[k] || 0) + v;
+      });
+    } else if (item.defense) {
+      totalStats['defense'] = (totalStats['defense'] || 0) + item.defense;
+    } else if (item.damage) {
+      totalStats['damage'] = (totalStats['damage'] || 0) + item.damage;
+    }
+  });
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="glass-panel rounded-2xl p-6 flex-1 overflow-auto">
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#9D4CDD] to-[#7B2CBF] flex items-center justify-center">
-            <Sword className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-white">Equipaggiamento</h2>
-            <p className="text-[#A19BAD] text-sm">4 Slot: Elmo, Spada, Colpo, Scudo</p>
+    <div className="w-full h-[85vh] bg-[#1A1525] text-gray-100 font-sans flex flex-col rounded-xl overflow-hidden shadow-2xl border border-[#2D283E]">
+      <div className="flex h-full p-4 gap-4">
+        
+        {/* Left Panel: Inventory Grid */}
+        <div className="w-1/3 bg-[#2D283E]/50 p-4 rounded-lg border border-[#4A3B72] overflow-y-auto flex flex-col">
+          <h2 className="text-xl font-bold mb-4 text-[#D4AF37] flex-shrink-0">INVENTARIO</h2>
+          <div className="grid grid-cols-4 gap-2">
+            {equipableItems.map((item, index) => (
+              <div 
+                key={index} 
+                onClick={() => { setSelectedInventoryItem(item); setSelectedSlot(null); }}
+                className={`bg-[#1A1525] p-2 rounded-md border transition-colors duration-200 cursor-pointer flex items-center justify-center text-xs text-center aspect-square ${selectedInventoryItem?.id === item.id ? 'border-[#D4AF37]' : 'border-[#4A3B72] hover:border-[#7b2cbf]'}`}
+                style={{ borderColor: selectedInventoryItem?.id === item.id ? RARITY_COLORS[item.rarity] || '#D4AF37' : undefined }}
+              >
+                <div className="flex flex-col items-center gap-1">
+                  <span className="truncate w-full block">{item.name?.split(' ')[0]}</span>
+                  {item.rarity === 'legendary' && <Sparkles className="w-3 h-3 text-[#F59E0B]" />}
+                </div>
+              </div>
+            ))}
+            {equipableItems.length === 0 && (
+              <div className="col-span-4 text-center text-gray-500 py-4">Nessun oggetto equipaggiabile</div>
+            )}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Equipment Slots Visual */}
-          <div className="relative">
-            <div className="aspect-square max-w-md mx-auto relative">
-              {/* Premium Character Preview */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                <CharacterPreview equipment={equipment} className="w-full h-full scale-[1.3] opacity-90" />
-              </div>
-
-              {/* 4 Equipment Slots */}
-              {EQUIPMENT_SLOTS.map(slot => {
-                const equippedItem = equipment[slot.id];
-                const rarityColor = equippedItem ? RARITY_COLORS[equippedItem.rarity] : '#6C667A';
-                
-                const positions = {
-                  top: 'top-0 left-1/2 -translate-x-1/2',
-                  bottom: 'bottom-0 left-1/2 -translate-x-1/2',
-                  left: 'left-0 top-1/2 -translate-y-1/2',
-                  right: 'right-0 top-1/2 -translate-y-1/2'
-                };
-
-                return (
-                  <motion.button
-                    key={slot.id}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setSelectedSlot(slot.id)}
-                    className={`absolute ${positions[slot.position]} w-20 h-20 rounded-xl transition-all flex flex-col items-center justify-center gap-1 overflow-hidden`}
-                    style={{
-                      backgroundColor: equippedItem ? `${rarityColor}20` : 'rgba(74, 59, 114, 0.3)',
-                      borderWidth: 2,
-                      borderColor: equippedItem ? rarityColor : 'rgba(255,255,255,0.1)',
-                      boxShadow: equippedItem ? `0 0 20px ${rarityColor}40` : 'none'
-                    }}
-                    data-testid={`equipment-slot-${slot.id}`}
-                  >
-                    {equippedItem ? (
-                      <>
-                        <img 
-                          src={getItemImage(equippedItem.item_id || equippedItem.id)} 
-                          alt={equippedItem.name}
-                          className="absolute inset-0 w-full h-full object-cover opacity-70"
-                          onError={(e) => { e.target.style.display = 'none'; }}
-                        />
-                        <slot.icon className="w-8 h-8 relative z-10" style={{ color: rarityColor, filter: 'drop-shadow(0 0 3px rgba(0,0,0,0.9))' }} />
-                        <span className="text-[10px] text-white truncate max-w-full px-1 relative z-10 bg-black/50 rounded">
-                          {equippedItem.name?.split(' ')[0]}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <slot.icon className="w-6 h-6 text-[#6C667A]" />
-                        <span className="text-[10px] text-[#6C667A]">{slot.name}</span>
-                      </>
-                    )}
-                    
-                    {equippedItem?.rarity === 'legendary' && (
-                      <Sparkles className="absolute -top-1 -right-1 w-4 h-4 text-[#F59E0B] z-20" />
-                    )}
-                  </motion.button>
-                );
-              })}
+        {/* Center Panel: Character Display */}
+        <div className="w-1/3 flex flex-col items-center justify-center relative bg-gradient-to-t from-[#0f0c1b] to-[#1A1525] rounded-lg shadow-inner border border-[#2D283E] overflow-hidden">
+          <div className="absolute inset-0">
+             <CharacterPreview equipment={equipment} />
+          </div>
+          
+          <div className="absolute bottom-0 flex justify-around w-full p-4 bg-[#0f0c1b]/80 backdrop-blur-sm rounded-b-lg border-t border-[#2D283E] z-10">
+            <div className="text-center">
+              <div className="text-red-400 text-xs font-bold uppercase">Health</div>
+              <div className="text-base font-bold">{character?.hp || 100} / {character?.max_hp || 100}</div>
             </div>
+            <div className="text-center">
+              <div className="text-blue-400 text-xs font-bold uppercase">Mana</div>
+              <div className="text-base font-bold">{character?.mana || 100} / {character?.max_mana || 100}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-yellow-400 text-xs font-bold uppercase">Gold</div>
+              <div className="text-base font-bold">{character?.gold || 0}</div>
+            </div>
+          </div>
+        </div>
 
-            {/* Total Stats */}
-            {Object.keys(totalStats).length > 0 && (
-              <div className="mt-6">
-                <h4 className="text-white font-medium mb-3 flex items-center gap-2">
-                  <Star className="w-4 h-4 text-[#D4AF37]" />
-                  Bonus Totali Equipaggiamento
-                </h4>
-                <div className="grid grid-cols-3 gap-2">
+        {/* Right Panel: Equipment Slots and Item Details */}
+        <div className="w-1/3 bg-[#2D283E]/50 p-4 rounded-lg border border-[#4A3B72] flex flex-col overflow-y-auto">
+          <h2 className="text-xl font-bold mb-4 text-[#D4AF37] flex-shrink-0">EQUIPAGGIAMENTO</h2>
+          
+          <div className="grid grid-cols-2 gap-2 mb-6 flex-shrink-0">
+            {EQUIPMENT_SLOTS.map((slot, index) => {
+              const equippedItem = equipment[slot.id];
+              const isSelected = selectedSlot === slot.id;
+              
+              return (
+                <div 
+                  key={index} 
+                  onClick={() => { setSelectedSlot(slot.id); setSelectedInventoryItem(null); }}
+                  className={`bg-[#1A1525] p-2 rounded-md border transition-colors duration-200 cursor-pointer flex flex-col items-center justify-center text-sm min-h-[80px] relative ${isSelected ? 'border-[#D4AF37]' : 'border-[#4A3B72] hover:border-[#7b2cbf]'}`}
+                  style={{ borderColor: isSelected || equippedItem ? RARITY_COLORS[equippedItem?.rarity] || (isSelected ? '#D4AF37' : '#4A3B72') : undefined }}
+                >
+                  <span className="text-gray-400 text-xs mb-1 flex items-center gap-1"><slot.icon className="w-3 h-3"/> {slot.name}</span>
+                  <span className="font-semibold text-center text-sm" style={{ color: equippedItem ? RARITY_COLORS[equippedItem.rarity] || '#fff' : '#6C667A' }}>
+                    {equippedItem ? equippedItem.name : 'Vuoto'}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Details Section */}
+          {(selectedSlot || selectedInventoryItem) ? (
+            <div className="bg-[#1A1525] p-4 rounded-lg border border-[#4A3B72] flex-grow flex flex-col">
+              {selectedSlot && (
+                <>
+                  <h3 className="text-lg font-bold mb-1" style={{ color: equipment[selectedSlot] ? RARITY_COLORS[equipment[selectedSlot].rarity] : '#fff' }}>
+                    {equipment[selectedSlot]?.name || 'Slot Vuoto'}
+                  </h3>
+                  {equipment[selectedSlot] && (
+                    <>
+                      <p className="text-xs text-gray-400 mb-2 uppercase">{equipment[selectedSlot].rarity} {equipment[selectedSlot].slot}</p>
+                      {equipment[selectedSlot].damage && <p className="text-xl font-bold text-red-400 mb-2">{equipment[selectedSlot].damage} ATTACK</p>}
+                      {equipment[selectedSlot].defense && <p className="text-xl font-bold text-blue-400 mb-2">{equipment[selectedSlot].defense} DEFENSE</p>}
+                      
+                      {equipment[selectedSlot].stats && (
+                        <ul className="list-disc list-inside text-sm mb-4 text-gray-300">
+                          {Object.entries(equipment[selectedSlot].stats).map(([k, v]) => (
+                            <li key={k}>+{v} {k.replace('_', ' ')}</li>
+                          ))}
+                        </ul>
+                      )}
+                      
+                      <Button 
+                        className="mt-auto w-full bg-red-600 hover:bg-red-700 text-white"
+                        onClick={() => handleUnequip(selectedSlot)}
+                        disabled={equipping}
+                      >
+                        Rimuovi
+                      </Button>
+                    </>
+                  )}
+                  {!equipment[selectedSlot] && (
+                    <p className="text-sm text-gray-400 mt-2">Seleziona un oggetto dall'inventario per equipaggiarlo in questo slot.</p>
+                  )}
+                </>
+              )}
+              
+              {selectedInventoryItem && (
+                <>
+                  <h3 className="text-lg font-bold mb-1" style={{ color: RARITY_COLORS[selectedInventoryItem.rarity] || '#fff' }}>
+                    {selectedInventoryItem.name}
+                  </h3>
+                  <p className="text-xs text-gray-400 mb-2 uppercase">{selectedInventoryItem.rarity} {selectedInventoryItem.slot}</p>
+                  
+                  {selectedInventoryItem.damage && <p className="text-xl font-bold text-red-400 mb-2">{selectedInventoryItem.damage} ATTACK</p>}
+                  {selectedInventoryItem.defense && <p className="text-xl font-bold text-blue-400 mb-2">{selectedInventoryItem.defense} DEFENSE</p>}
+                  
+                  {selectedInventoryItem.stats && (
+                    <ul className="list-disc list-inside text-sm mb-4 text-gray-300">
+                      {Object.entries(selectedInventoryItem.stats).map(([k, v]) => (
+                        <li key={k}>+{v} {k.replace('_', ' ')}</li>
+                      ))}
+                    </ul>
+                  )}
+                  
+                  <Button 
+                    className="mt-auto w-full bg-[#D4AF37] hover:bg-[#b5952f] text-black font-bold"
+                    onClick={() => handleEquip(selectedInventoryItem.id, selectedInventoryItem.slot)}
+                    disabled={equipping || !selectedInventoryItem.slot}
+                  >
+                    Equipaggia
+                  </Button>
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="bg-[#1A1525] p-4 rounded-lg border border-[#4A3B72] flex-grow flex items-center justify-center text-center">
+              <p className="text-gray-500 text-sm">Seleziona un oggetto o uno slot per vederne i dettagli.</p>
+            </div>
+          )}
+          
+          {/* Total Stats Summary */}
+          {Object.keys(totalStats).length > 0 && !selectedSlot && !selectedInventoryItem && (
+             <div className="mt-4 bg-[#1A1525] p-4 rounded-lg border border-[#4A3B72] flex-shrink-0">
+                <h4 className="text-[#D4AF37] font-bold text-sm mb-2">Bonus Totali</h4>
+                <div className="grid grid-cols-2 gap-2 text-xs">
                   {Object.entries(totalStats).map(([stat, val]) => (
-                    <div key={stat} className="bg-black/30 rounded-lg p-2 text-center">
-                      <p className="text-[#2A9D8F] font-bold">+{val}</p>
-                      <p className="text-[#6C667A] text-xs capitalize">{stat.replace('_', ' ')}</p>
+                    <div key={stat} className="flex justify-between border-b border-[#2D283E] pb-1">
+                      <span className="text-gray-400 capitalize">{stat.replace('_', ' ')}</span>
+                      <span className="text-green-400 font-bold">+{val}</span>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
-          </div>
+             </div>
+          )}
 
-          {/* Slot Details / Item Selection */}
-          <div>
-            <AnimatePresence mode="wait">
-              {selectedSlot ? (
-                <motion.div
-                  key="selection"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="gold-framed-panel rounded-xl p-5"
-                >
-                  {/* Current Slot Info */}
-                  {(() => {
-                    const slot = EQUIPMENT_SLOTS.find(s => s.id === selectedSlot);
-                    const equippedItem = equipment[selectedSlot];
-                    const availableItems = getItemsForSlot(selectedSlot);
-                    
-                    return (
-                      <>
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                            <slot.icon className="w-5 h-5 text-[#D4AF37]" />
-                            {slot.name}
-                          </h3>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setSelectedSlot(null)}
-                            className="text-[#A19BAD]"
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-
-                        {/* Currently Equipped */}
-                        {equippedItem && (
-                          <div 
-                            className="rounded-xl p-4 mb-4"
-                            style={{ 
-                              backgroundColor: `${RARITY_COLORS[equippedItem.rarity]}10`,
-                              borderWidth: 1,
-                              borderColor: RARITY_COLORS[equippedItem.rarity]
-                            }}
-                          >
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-[#A19BAD] text-sm">Equipaggiato:</span>
-                              <span 
-                                className="text-xs px-2 py-0.5 rounded capitalize"
-                                style={{ 
-                                  backgroundColor: `${RARITY_COLORS[equippedItem.rarity]}30`,
-                                  color: RARITY_COLORS[equippedItem.rarity]
-                                }}
-                              >
-                                {equippedItem.rarity}
-                              </span>
-                            </div>
-                            <h4 
-                              className="font-bold mb-2"
-                              style={{ color: RARITY_COLORS[equippedItem.rarity] }}
-                            >
-                              {equippedItem.name}
-                            </h4>
-                            <div className="flex flex-wrap gap-2 mb-3">
-                              {Object.entries(equippedItem.stats || {}).map(([stat, val]) => (
-                                <span key={stat} className="text-xs bg-black/30 px-2 py-1 rounded text-white">
-                                  +{val} {stat}
-                                </span>
-                              ))}
-                            </div>
-                            <Button
-                              onClick={() => handleUnequip(selectedSlot)}
-                              disabled={equipping}
-                              variant="ghost"
-                              className="w-full text-[#E63946] hover:bg-[#E63946]/10"
-                              data-testid="unequip-btn"
-                            >
-                              Rimuovi
-                            </Button>
-                          </div>
-                        )}
-
-                        {/* Available Items */}
-                        <div>
-                          <h4 className="text-white font-medium mb-3">
-                            Oggetti Disponibili ({availableItems.length})
-                          </h4>
-                          
-                          {availableItems.length === 0 ? (
-                            <p className="text-[#6C667A] text-center py-8">
-                              Nessun oggetto disponibile per questo slot.
-                              <br />
-                              <span className="text-sm">Acquista dal negozio!</span>
-                            </p>
-                          ) : (
-                            <div className="space-y-2 max-h-64 overflow-y-auto">
-                              {availableItems.map(item => (
-                                <button
-                                  key={item.id}
-                                  onClick={() => handleEquip(item.id, selectedSlot)}
-                                  disabled={equipping}
-                                  className="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover:bg-white/5"
-                                  style={{ borderWidth: 1, borderColor: `${RARITY_COLORS[item.rarity]}40` }}
-                                  data-testid={`equip-item-${item.id}`}
-                                >
-                                  <div 
-                                    className="w-10 h-10 rounded-lg flex items-center justify-center"
-                                    style={{ backgroundColor: `${RARITY_COLORS[item.rarity]}20` }}
-                                  >
-                                    <slot.icon className="w-5 h-5" style={{ color: RARITY_COLORS[item.rarity] }} />
-                                  </div>
-                                  <div className="flex-1 text-left">
-                                    <p className="text-white font-medium">{item.name}</p>
-                                    <div className="flex gap-1">
-                                      {Object.entries(item.stats || {}).slice(0, 3).map(([stat, val]) => (
-                                        <span key={stat} className="text-[10px] text-[#2A9D8F]">
-                                          +{val} {stat}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  </div>
-                                  <ChevronRight className="w-4 h-4 text-[#D4AF37]" />
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </>
-                    );
-                  })()}
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="info"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="text-center py-12"
-                >
-                  <Package className="w-16 h-16 text-[#6C667A] mx-auto mb-4" />
-                  <h3 className="text-white font-medium mb-2">Seleziona uno Slot</h3>
-                  <p className="text-[#6C667A] text-sm">
-                    Clicca su uno dei 4 slot per vedere<br />
-                    gli oggetti disponibili o rimuovere l'equipaggiamento
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
         </div>
       </div>
     </div>

@@ -58,7 +58,7 @@ export default function ShopPanel() {
     setLoading(true);
     try {
       const response = await axios.get(`${API}/shop`);
-      setShopItems(response.data);
+      setShopItems(response.data || []);
     } catch (error) {
       console.error('Failed to fetch shop items:', error);
       toast.error('Errore nel caricamento del negozio');

@@ -171,7 +171,7 @@ export function buildViewmodelFor(weaponId) {
       const fbxModel = assetManager.getSwordModel();
       if (fbxModel) {
         fbxModel.rotation.set(0, 0, 0.45);
-        fbxModel.scale.setScalar(1.2); // Scaled up from tiny 0.045
+        fbxModel.scale.multiplyScalar(1.2); // Scaled up relative to base scale
         fbxModel.position.set(0, -0.1, 0);
         group.add(fbxModel);
       } else {
@@ -184,7 +184,7 @@ export function buildViewmodelFor(weaponId) {
       const fbxModel = assetManager.getSwordModel();
       if (fbxModel) {
         fbxModel.rotation.set(0, 0, 0.45);
-        fbxModel.scale.setScalar(1.0); // Scaled up from tiny 0.04
+        fbxModel.scale.multiplyScalar(1.0); 
         fbxModel.position.set(0, -0.1, 0);
         group.add(fbxModel);
       } else {

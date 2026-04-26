@@ -106,12 +106,12 @@ export default function ClanPanel() {
             
             <div className="flex items-center justify-between text-sm mb-4">
               <span className="text-[#6C667A]">Members</span>
-              <span className="text-white font-mono">{currentClan.members.length}</span>
+              <span className="text-white font-mono">{currentClan.members?.length || 0}</span>
             </div>
             
             <div className="flex items-center justify-between text-sm mb-4">
               <span className="text-[#6C667A]">Territories</span>
-              <span className="text-[#2A9D8F] font-mono">{currentClan.territories.length}</span>
+              <span className="text-[#2A9D8F] font-mono">{currentClan.territories?.length || 0}</span>
             </div>
             
             {currentClan.leader_id === character?.id && (
@@ -253,7 +253,7 @@ export default function ClanPanel() {
                     <span className="text-[#D4AF37] text-xs">[{clan.tag}]</span>
                   </div>
                   <p className="text-[#6C667A] text-sm">
-                    {clan.members.length} members • Level {clan.level}
+                    {clan.members?.length || 0} members • Level {clan.level}
                   </p>
                 </div>
                 

@@ -98,15 +98,15 @@ export default function AdminPanel() {
       }
       
       const results = await Promise.all(promises);
-      setUsers(results[0].data);
-      setCharacters(results[1].data);
+      setUsers(results[0].data || []);
+      setCharacters(results[1].data || []);
       
       if (isSuperAdmin) {
-        setDashboardData(results[2].data);
-        setAllItems(results[3].data);
-        setCoAdmins(results[4].data);
-        setAdminLogs(results[5].data);
-        setContestRewards(results[6].data);
+        setDashboardData(results[2].data || null);
+        setAllItems(results[3].data || []);
+        setCoAdmins(results[4].data || []);
+        setAdminLogs(results[5].data || []);
+        setContestRewards(results[6].data || []);
       }
     } catch (error) {
       console.error('Failed to fetch admin data:', error);

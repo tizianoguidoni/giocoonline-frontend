@@ -24,7 +24,7 @@ export default function QuestsPanel() {
     setLoading(true);
     try {
       const response = await axios.get(`${API}/quests`);
-      setQuests(response.data);
+      setQuests(response.data || []);
     } catch (error) {
       console.error('Failed to fetch quests:', error);
       toast.error('Errore nel caricamento missioni');
