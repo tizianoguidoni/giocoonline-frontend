@@ -205,8 +205,18 @@ export function CharacterPreview({ equipment = {}, className = "", style = {} })
       torso.position.y = 0.9;
       
       // Head
+      const headGroup = new THREE.Group();
       const head = new THREE.Mesh(new THREE.SphereGeometry(0.18, 32, 32), bodyMat);
-      head.position.y = 1.6;
+      
+      // Glowing Eyes
+      const eyeMat = new THREE.MeshBasicMaterial({ color: mainColor });
+      const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 8), eyeMat);
+      eyeL.position.set(0.06, 0.05, 0.16);
+      const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 8), eyeMat);
+      eyeR.position.set(-0.06, 0.05, 0.16);
+      
+      headGroup.add(head, eyeL, eyeR);
+      headGroup.position.y = 1.6;
       
       // Neck ring
       const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.1, 16), jointMat);
@@ -233,20 +243,40 @@ export function CharacterPreview({ equipment = {}, className = "", style = {} })
       const legR = new THREE.Mesh(new THREE.CapsuleGeometry(0.1, 0.5, 4, 16), bodyMat);
       legR.position.set(-0.15, 0.25, 0);
 
-      charGroup.add(torso, head, neck, armL, armR, handL, handR, legL, legR);
+      charGroup.add(torso, headGroup, neck, armL, armR, handL, handR, legL, legR);
       charGroup.position.y = -0.5;
 
       // Re-apply equipment visuals to procedural mesh
       const wId = equipment.sword?.item_id || equipment.sword?.id;
       if (wId) {
-        const fallBackWeapon = buildViewmodelFor(wId);
-        if (fallBackWeapon) {
-          fallBackWeapon.scale.setScalar(0.001);
-          animatedItems.push({ mesh: fallBackWeapon, targetScale: 0.5 });
-          fallBackWeapon.position.set(0.55, 0.4, 0.3); // In right hand
-          fallBackWeapon.rotation.set(Math.PI/2, 0, 0);
-          charGroup.add(fallBackWeapon);
-        }
+        // Detailed Procedural Sword
+        const swordGroup = new THREE.Group();
+        const handleMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.8 });
+        const guardMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.9, roughness: 0.2 });
+        const bladeMat = new THREE.MeshPhysicalMaterial({ color: 0xe0e0e0, metalness: 1.0, roughness: 0.1, clearcoat: 1.0 });
+
+        const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.2), handleMat);
+        handle.position.y = 0.1;
+        const guard = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.05, 0.05), guardMat);
+        guard.position.y = 0.2;
+        
+        // Blade (flattened cone)
+        const blade = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.8, 4), bladeMat);
+        blade.position.y = 0.6;
+        blade.scale.set(1, 1, 0.2); // flatten
+
+        // Magic core
+        const coreMat = new THREE.MeshBasicMaterial({ color: mainColor });
+        const core = new THREE.Mesh(new THREE.SphereGeometry(0.04), coreMat);
+        core.position.y = 0.2;
+        core.position.z = 0.03;
+
+        swordGroup.add(handle, guard, blade, core);
+        swordGroup.scale.setScalar(0.001);
+        animatedItems.push({ mesh: swordGroup, targetScale: 0.6 });
+        swordGroup.position.set(0.55, 0.4, 0.3); // In right hand
+        swordGroup.rotation.set(Math.PI/2, 0, 0);
+        charGroup.add(swordGroup);
       }
 
       const hId = equipment.helmet?.item_id || equipment.helmet?.id;
@@ -262,14 +292,32 @@ export function CharacterPreview({ equipment = {}, className = "", style = {} })
 
       const sId = equipment.shield?.item_id || equipment.shield?.id;
       if (sId) {
-        const shieldMat = new THREE.MeshPhysicalMaterial({ color: mainColor, metalness: 0.8, roughness: 0.2, transmission: 0.5, thickness: 0.1 });
-        const shieldMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.05, 32), shieldMat);
-        shieldMesh.scale.setScalar(0.001);
-        animatedItems.push({ mesh: shieldMesh, targetScale: 1.0 });
-        shieldMesh.rotation.x = Math.PI / 2;
-        shieldMesh.position.set(-0.55, 0.4, 0.2); // On left arm
-        charGroup.add(shieldMesh);
+        // Detailed Procedural Shield
+        const shieldGroup = new THREE.Group();
+        const shieldBaseMat = new THREE.MeshPhysicalMaterial({ color: 0x2d283e, metalness: 0.6, roughness: 0.5 });
+        const shieldRimMat = new THREE.MeshStandardMaterial({ color: mainColor, metalness: 0.9, roughness: 0.2 });
+        
+        // Kite shield shape
+        const base = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.05, 0.7, 3), shieldBaseMat);
+        base.rotation.z = Math.PI; // Point down
+        base.scale.set(1, 1, 0.2); // Flatten
+        
+        const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.06, 0.72, 3), shieldRimMat);
+        rim.rotation.z = Math.PI;
+        rim.scale.set(1, 1, 0.1);
+        rim.position.z = 0.02;
+
+        const crest = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.3, 0.1), shieldRimMat);
+        crest.position.set(0, 0, 0.05);
+
+        shieldGroup.add(base, rim, crest);
+        shieldGroup.scale.setScalar(0.001);
+        animatedItems.push({ mesh: shieldGroup, targetScale: 1.0 });
+        shieldGroup.rotation.y = -Math.PI / 4;
+        shieldGroup.position.set(-0.55, 0.4, 0.2); // On left arm
+        charGroup.add(shieldGroup);
       }
+
     }
     
     // Subtle rotation and floating animation

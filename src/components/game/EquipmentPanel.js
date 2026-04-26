@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import axios from 'axios';
 import { Sparkles, Shield, Sword, Crown, Crosshair } from 'lucide-react';
 import { CharacterPreview } from './CharacterPreview';
+import { getItemImage } from '@/data/itemImages';
 
 const API = process.env.REACT_APP_BACKEND_URL ? `${process.env.REACT_APP_BACKEND_URL}/api` : '/api';
 
@@ -157,10 +158,11 @@ export default function EquipmentPanel() {
                   <div 
                     key={index} 
                     onClick={() => { setSelectedInventoryItem(item); setSelectedSlot(null); }}
-                    className={`relative p-2 rounded-md border bg-gray-800 bg-opacity-70 transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-xs text-center aspect-square ${isSelected ? 'border-blue-500 shadow-blue-glow' : 'border-gray-700 hover:border-blue-400'}`}
+                    className={`relative p-2 rounded-md border bg-gray-800 bg-opacity-70 transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-xs text-center aspect-square overflow-hidden group ${isSelected ? 'border-blue-500 shadow-blue-glow' : 'border-gray-700 hover:border-blue-400'}`}
                   >
-                    <span className="truncate w-full block font-semibold">{item.name?.split(' ')[0]}</span>
-                    {item.rarity === 'legendary' && <Sparkles className="absolute top-1 right-1 w-3 h-3 text-yellow-400" />}
+                    <img src={getItemImage(item.item_id || item.id)} alt={item.name} className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-80 transition-opacity mix-blend-screen" />
+                    <span className="truncate w-full block font-semibold relative z-10 drop-shadow-md">{item.name?.split(' ')[0]}</span>
+                    {item.rarity === 'legendary' && <Sparkles className="absolute top-1 right-1 w-3 h-3 text-yellow-400 z-10" />}
                   </div>
                 );
               })}
@@ -194,18 +196,22 @@ export default function EquipmentPanel() {
               {EQUIPMENT_SLOTS.map((slot, index) => {
                 const equippedItem = equipment[slot.id];
                 const isSelected = selectedSlot === slot.id;
+                const SlotIcon = slot.icon;
                 
                 return (
                   <div 
                     key={index} 
                     onClick={() => { setSelectedSlot(slot.id); setSelectedInventoryItem(null); }}
-                    className={`relative p-3 rounded-md border bg-gray-800 bg-opacity-70 transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-sm min-h-[80px] ${isSelected ? 'border-yellow-400 shadow-yellow-glow' : 'border-gray-700 hover:border-yellow-400'}`}
+                    className={`relative p-3 rounded-md border bg-gray-800 bg-opacity-70 transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-sm min-h-[80px] overflow-hidden group ${isSelected ? 'border-yellow-400 shadow-yellow-glow' : 'border-gray-700 hover:border-yellow-400'}`}
                   >
-                    <span className="text-gray-400 text-xs uppercase flex items-center gap-1"><slot.icon className="w-3 h-3"/>{slot.name}</span>
-                    <span className="font-bold text-base mt-1 text-center" style={{ color: equippedItem ? RARITY_COLORS[equippedItem.rarity] || '#fde047' : '#9ca3af' }}>
+                    {equippedItem && (
+                      <img src={getItemImage(equippedItem.item_id || equippedItem.id)} alt={equippedItem.name} className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-50 transition-opacity mix-blend-screen" />
+                    )}
+                    <span className="text-gray-400 text-xs uppercase flex items-center gap-1 relative z-10"><SlotIcon className="w-3 h-3"/>{slot.name}</span>
+                    <span className="font-bold text-base mt-1 text-center relative z-10 drop-shadow-md" style={{ color: equippedItem ? RARITY_COLORS[equippedItem.rarity] || '#fde047' : '#9ca3af' }}>
                       {equippedItem ? equippedItem.name : 'Empty'}
                     </span>
-                    {isSelected && <div className="absolute inset-0 border-2 border-yellow-500 rounded-md pointer-events-none"></div>}
+                    {isSelected && <div className="absolute inset-0 border-2 border-yellow-500 rounded-md pointer-events-none z-20"></div>}
                   </div>
                 );
               })}
