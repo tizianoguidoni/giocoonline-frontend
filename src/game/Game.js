@@ -13,6 +13,7 @@ import { BlackMarketMerchant } from './merchant';
 import { AudioSystem } from './audio';
 import { SpellSystem, SPELLS, spawnPotion } from './spells';
 import { enemySkinForZone, updateProps } from './props';
+import { SeasonPassSystem } from './SeasonPassSystem';
 
 const PLAYER_HEIGHT = 1.6;
 const PLAYER_RADIUS = 0.3;
@@ -79,6 +80,7 @@ export class Game {
       damageCooldown: 0,
       bobTime: 0,
     };
+    this.seasonPass = new SeasonPassSystem(this);
     this._setupWorld();
     this._bindEvents();
     this._updateUI();
@@ -543,6 +545,7 @@ export class Game {
     if (enemy.dead) {
       this.player.score += 50; // default
       this.player.pocketMoney += 20; // default
+      this.seasonPass.addXP(50); // XP for kill
       this._updateUI();
     } else {
       this.onEvent({ type: 'hit-marker' });
@@ -574,6 +577,7 @@ export class Game {
     } else if (p.userData.isGem) {
       this.player.gems += 1;
       this.player.score += 25;
+      this.seasonPass.addXP(25); // XP for gem
       this.audio && this.audio.sfxPickup();
       this.onEvent({ type: 'toast', text: `💎 Gemma +25` });
     } else if (p.userData.isMoney) {
@@ -717,6 +721,7 @@ export class Game {
       bossHp: this.boss ? Math.max(0, this.boss.hp) : 0,
       bossMaxHp: this.boss ? this.boss.maxHp : 0,
       bossVisible: this.boss ? (!this.boss.dead && this.camera.position.distanceTo(this.boss.mesh.position) < 18) : false,
+      seasonPass: this.seasonPass.getState(),
     };
   }
 

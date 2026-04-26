@@ -5,7 +5,7 @@ import {
   Map, Coins, Swords, Trash2, 
   UserMinus, MessageSquareOff, Eye,
   CloudRain, Sun, Moon, Palette, Terminal,
-  Heart, Crown
+  Heart, Crown, Gift
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL ? `${process.env.REACT_APP_BACKEND_URL}/api` : '/api';
@@ -70,6 +70,19 @@ export function AdminPanelUI({ role, game, onClose }) {
         setConsoleLogs(prev => [...prev, `Success: Environment theme set to ${theme}.`]);
       } else {
         setConsoleLogs(prev => [...prev, `Error: Theme '${theme}' not found.`]);
+      }
+    } else if (base === '/givepass') {
+      const targetUser = parts[1];
+      if (targetUser) {
+        // Here we would typically make an API call to grant the pass
+        axios.post(`${API}/admin/givepass`, { username: targetUser }).catch(() => {});
+        // If it's the current player, unlock immediately
+        if (game?.seasonPass && (targetUser === 'me' || targetUser === 'all')) {
+          game.seasonPass.purchasePremium();
+        }
+        setConsoleLogs(prev => [...prev, `Success: Granted Premium Season Pass to ${targetUser}.`]);
+      } else {
+        setConsoleLogs(prev => [...prev, `Error: Specify username (e.g., /givepass Mario).`]);
       }
     } else {
       setConsoleLogs(prev => [...prev, `Error: Unknown command.`]);
@@ -306,6 +319,13 @@ export function AdminPanelUI({ role, game, onClose }) {
                            </button>
                            <button className="p-2 hover:bg-orange-500/20 text-white/20 hover:text-orange-500 rounded-lg transition-all" title="Mute Player">
                               <MessageSquareOff className="w-4 h-4" />
+                           </button>
+                           <button 
+                             onClick={() => executeCommand(`/givepass ${u.username}`)}
+                             className="p-2 hover:bg-yellow-500/20 text-white/20 hover:text-yellow-500 rounded-lg transition-all" 
+                             title="Gift Season Pass"
+                           >
+                              <Gift className="w-4 h-4" />
                            </button>
                            <button className="p-2 hover:bg-[#ff3c00]/20 text-white/20 hover:text-[#ff3c00] rounded-lg transition-all" title="View Profile">
                               <Eye className="w-4 h-4" />

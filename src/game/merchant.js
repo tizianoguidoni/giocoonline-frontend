@@ -89,7 +89,9 @@ export class BlackMarketMerchant {
   }
 
   canInteract(playerPos) {
-    return this.mesh.position.distanceTo(playerPos) < this.radius;
+    const dx = this.mesh.position.x - playerPos.x;
+    const dz = this.mesh.position.z - playerPos.z;
+    return Math.sqrt(dx * dx + dz * dz) < this.radius;
   }
 
   update(dt, playerPos) {

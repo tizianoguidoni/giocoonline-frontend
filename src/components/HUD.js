@@ -46,6 +46,22 @@ export function MiniMap({ game }) {
     style={{ position: 'fixed', top: 20, right: 20, borderRadius: 8, border: '1px solid rgba(255,180,80,0.35)', boxShadow: '0 0 24px rgba(0,0,0,0.6), inset 0 0 10px rgba(0,0,0,0.8)' }} />;
 }
 
+function Icon({ src, fallback, size = 24, style = {} }) {
+  const [error, setError] = React.useState(false);
+  const fullSrc = `/assets/icons/${src}`;
+  
+  if (error || !src) return <span style={{ fontSize: size, ...style }}>{fallback}</span>;
+  
+  return (
+    <img 
+      src={fullSrc} 
+      alt={fallback} 
+      onError={() => setError(true)}
+      style={{ width: size, height: size, objectFit: 'contain', ...style }}
+    />
+  );
+}
+
 export function HUD({ state, zoneName, onOpenBank }) {
   if (!state) return null;
   const hpPct = (state.hp / state.maxHp) * 100;
@@ -53,6 +69,7 @@ export function HUD({ state, zoneName, onOpenBank }) {
   const bossPct = state.bossMaxHp ? (state.bossHp / state.bossMaxHp) * 100 : 0;
   const mm = Math.floor(state.time / 60), ss = Math.floor(state.time % 60);
   const w = state.weapon;
+  
   return (
     <>
       {/* Crosshair */}
@@ -67,32 +84,46 @@ export function HUD({ state, zoneName, onOpenBank }) {
 
       {/* Bottom-left: HP + Mana + money */}
       <div style={{ position: 'fixed', bottom: 20, left: 20, width: 340, color: '#f0d8a8', fontFamily: 'ui-monospace, monospace', pointerEvents: 'none', zIndex: 50 }}>
-        <div style={{ fontSize: 12, marginBottom: 4, display: 'flex', justifyContent: 'space-between' }}>
-          <span>❤ HP{state.shieldActive ? ' 🛡' : ''}</span><span data-testid="hp-text">{state.hp}/{state.maxHp}</span>
+        <div style={{ fontSize: 12, marginBottom: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Icon src="hp.png" fallback="❤" size={16} /> HP{state.shieldActive ? ' 🛡' : ''}
+          </span>
+          <span data-testid="hp-text">{state.hp}/{state.maxHp}</span>
         </div>
         <div style={{ height: 12, background: 'rgba(40,10,10,0.8)', border: '1px solid rgba(255,80,80,0.4)', borderRadius: 2, overflow: 'hidden' }}>
           <div data-testid="hp-bar" style={{ width: `${hpPct}%`, height: '100%', background: hpPct > 50 ? 'linear-gradient(90deg,#d02020,#ff4040)' : hpPct > 25 ? 'linear-gradient(90deg,#c06020,#ff8030)' : 'linear-gradient(90deg,#800010,#ff0020)', transition: 'width .2s' }} />
         </div>
-        <div style={{ fontSize: 11, marginTop: 8, marginBottom: 3, display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ color: '#8aa0ff' }}>🔮 Mana</span><span data-testid="mana-text">{state.mana}/{state.maxMana}</span>
+        <div style={{ fontSize: 11, marginTop: 8, marginBottom: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ color: '#8aa0ff', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Icon src="mana.png" fallback="🔮" size={14} /> Mana
+          </span>
+          <span data-testid="mana-text">{state.mana}/{state.maxMana}</span>
         </div>
         <div style={{ height: 8, background: 'rgba(10,15,40,0.8)', border: '1px solid rgba(100,140,255,0.4)', borderRadius: 2, overflow: 'hidden' }}>
           <div data-testid="mana-bar" style={{ width: `${manaPct}%`, height: '100%', background: 'linear-gradient(90deg,#3050c0,#60a0ff)', transition: 'width .2s' }} />
         </div>
-        <div style={{ marginTop: 10, display: 'flex', gap: 16, fontSize: 13 }}>
-          <span data-testid="pocket-money" style={{ color: '#ffd060' }}>💰 {state.pocketMoney}€</span>
-          <span data-testid="bank-money" style={{ color: '#60b0ff' }}>🏦 {state.bankMoney}€</span>
-          <span data-testid="gems">💎 {state.gems}</span>
-          <span data-testid="keys">🗝 {state.keys.length}</span>
+        <div style={{ marginTop: 10, display: 'flex', gap: 16, fontSize: 13, alignItems: 'center' }}>
+          <span data-testid="pocket-money" style={{ color: '#ffd060', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Icon src="gold.png" fallback="💰" size={16} /> {state.pocketMoney}€
+          </span>
+          <span data-testid="bank-money" style={{ color: '#60b0ff', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Icon src="bank.png" fallback="🏦" size={16} /> {state.bankMoney}€
+          </span>
+          <span data-testid="gems" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Icon src="gem.png" fallback="💎" size={16} /> {state.gems}
+          </span>
+          <span data-testid="keys" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Icon src="key.png" fallback="🗝" size={16} /> {state.keys.length}
+          </span>
         </div>
       </div>
 
       {/* Bottom-center: spell bar */}
       <div style={{ position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 8, pointerEvents: 'none', zIndex: 50 }}>
         {[
-          { k: 'Z', icon: '🔥', name: 'Fireball', mana: 30, color: '#ff6020' },
-          { k: 'X', icon: '❤', name: 'Cura', mana: 25, color: '#40ff80' },
-          { k: 'C', icon: '🛡', name: 'Scudo', mana: 35, color: '#60a0ff' },
+          { k: 'Z', icon: 'fireball.png', fb: '🔥', name: 'Fireball', mana: 30, color: '#ff6020' },
+          { k: 'X', icon: 'heal.png', fb: '❤', name: 'Cura', mana: 25, color: '#40ff80' },
+          { k: 'C', icon: 'shield.png', fb: '🛡', name: 'Scudo', mana: 35, color: '#60a0ff' },
         ].map(s => {
           const canCast = state.mana >= s.mana;
           return (
@@ -102,9 +133,10 @@ export function HUD({ state, zoneName, onOpenBank }) {
               borderRadius: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               color: canCast ? '#fff' : 'rgba(200,200,200,0.4)', fontFamily: 'ui-monospace, monospace',
               opacity: canCast ? 1 : 0.5,
+              position: 'relative'
             }}>
-              <div style={{ fontSize: 24 }}>{s.icon}</div>
-              <div style={{ fontSize: 10 }}>[{s.k}] {s.mana}🔮</div>
+              <Icon src={s.icon} fallback={s.fb} size={32} />
+              <div style={{ fontSize: 10, marginTop: 4 }}>[{s.k}] {s.mana}🔮</div>
             </div>
           );
         })}
@@ -112,7 +144,9 @@ export function HUD({ state, zoneName, onOpenBank }) {
 
       {/* Bottom-right: weapon */}
       <div style={{ position: 'fixed', bottom: 20, right: 20, width: 260, color: '#f0d8a8', fontFamily: 'ui-monospace, monospace', textAlign: 'right', pointerEvents: 'none', zIndex: 50 }}>
-        <div data-testid="weapon-name" style={{ fontSize: 18, color: '#ffc080' }}>{w.icon} {w.name}</div>
+        <div data-testid="weapon-name" style={{ fontSize: 18, color: '#ffc080', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
+          {w.name} <Icon src={w.icon} fallback={w.fallbackIcon} size={24} />
+        </div>
         <div data-testid="ammo" style={{ fontSize: 28, marginTop: 2 }}>
           {w.reloading ? 'R...' : (w.magazine === null || w.ammo === Infinity || w.magazine === Infinity ? '∞' : `${w.ammo} / ${w.reserve === Infinity ? '∞' : w.reserve}`)}
         </div>

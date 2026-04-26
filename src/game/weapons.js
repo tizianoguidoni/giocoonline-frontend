@@ -17,7 +17,8 @@ export const WEAPONS = {
     spread: 0.5,      // large arc for melee
     pellets: 3,       // hits up to 3 enemies in arc
     price: 0,
-    icon: '🗡',
+    icon: 'shortsword.png',
+    fallbackIcon: '🗡',
     color: 0xd0e0ff,
     melee: true,
   },
@@ -33,7 +34,8 @@ export const WEAPONS = {
     spread: 0.8,
     pellets: 4,
     price: 180,
-    icon: '🔨',
+    icon: 'warhammer.png',
+    fallbackIcon: '🔨',
     color: 0xc88850,
     melee: true,
   },
@@ -49,7 +51,8 @@ export const WEAPONS = {
     spread: 0.002,
     pellets: 1,
     price: 240,
-    icon: '🏹',
+    icon: 'runebow.png',
+    fallbackIcon: '🏹',
     color: 0x80ffb0,
     melee: false,
   },
@@ -65,7 +68,8 @@ export const WEAPONS = {
     spread: 0.015,
     pellets: 1,
     price: 360,
-    icon: '🔮',
+    icon: 'magestaff.png',
+    fallbackIcon: '🔮',
     color: 0xc040ff,
     melee: false,
   },
@@ -81,7 +85,8 @@ export const WEAPONS = {
     spread: 0.9,
     pellets: 5,
     price: 600,
-    icon: '⚔',
+    icon: 'soulblade.png',
+    fallbackIcon: '⚔',
     color: 0xff4060,
     melee: true,
   },
@@ -166,8 +171,8 @@ export function buildViewmodelFor(weaponId) {
       const fbxModel = assetManager.getSwordModel();
       if (fbxModel) {
         fbxModel.rotation.set(0, 0, 0.45);
-        fbxModel.scale.setScalar(0.045); 
-        fbxModel.position.set(0, 0.2, 0);
+        fbxModel.scale.setScalar(1.2); // Scaled up from tiny 0.045
+        fbxModel.position.set(0, -0.1, 0);
         group.add(fbxModel);
       } else {
         group.add(buildSwordViewmodel(0xff4060));
@@ -179,8 +184,8 @@ export function buildViewmodelFor(weaponId) {
       const fbxModel = assetManager.getSwordModel();
       if (fbxModel) {
         fbxModel.rotation.set(0, 0, 0.45);
-        fbxModel.scale.setScalar(0.04); 
-        fbxModel.position.set(0, 0.2, 0);
+        fbxModel.scale.setScalar(1.0); // Scaled up from tiny 0.04
+        fbxModel.position.set(0, -0.1, 0);
         group.add(fbxModel);
       } else {
         group.add(buildSwordViewmodel(0xd0e0ff));

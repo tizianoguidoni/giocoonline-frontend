@@ -28,6 +28,8 @@ import BossPanel from '@/components/game/BossPanel';
 import ShopPanel from '@/components/game/ShopPanel';
 import EquipmentPanel from '@/components/game/EquipmentPanel';
 import Maze3D from '@/components/game/Maze3D';
+import { SeasonPassUI } from '@/components/game/SeasonPassUI';
+import { SEASONS } from '@/game/SeasonPassSystem';
 
 // Avatar images for different classes
 const CLASS_AVATARS = {
@@ -88,7 +90,18 @@ export default function GamePage() {
   const [turnTimer, setTurnTimer] = useState(5);
   const [inCombat, setInCombat] = useState(false);
   const [isInMaze, setIsInMaze] = useState(false);
+  const [showSeasonPass, setShowSeasonPass] = useState(false);
   const chatEndRef = useRef(null);
+
+  // Mock season state for the UI
+  const [mockSeasonState, setMockSeasonState] = useState({
+    level: 1,
+    xp: 0,
+    xpRequired: 1000,
+    isPremium: false,
+    claimedFree: [],
+    claimedPremium: []
+  });
 
   // Fetch enemies from API
   useEffect(() => {
@@ -402,16 +415,25 @@ export default function GamePage() {
               { id: 'quests', icon: Scroll, label: t('quests') },
               { id: 'clan', icon: Users, label: t('clan') },
               { id: 'leaderboard', icon: BarChart3, label: t('leaderboard') },
+              { id: 'seasonpass', icon: Crown, label: 'Season Pass' },
               ...((user?.role === 'super_admin' || user?.role === 'co_admin') 
-                ? [{ id: 'admin', icon: Crown, label: 'Admin' }] 
+                ? [{ id: 'admin', icon: AdminIcon, label: 'Admin' }] 
                 : [])
             ].map((item) => (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => {
+                  if (item.id === 'seasonpass') {
+                    setShowSeasonPass(true);
+                  } else {
+                    setActiveTab(item.id);
+                  }
+                }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                  activeTab === item.id
+                  activeTab === item.id && item.id !== 'seasonpass'
                     ? 'bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30'
+                    : item.id === 'seasonpass'
+                    ? 'bg-gradient-to-r from-[#D4AF37]/10 to-[#B8860B]/10 text-[#D4AF37] hover:from-[#D4AF37]/20 border border-[#D4AF37]/20 shadow-[0_0_10px_rgba(212,175,55,0.1)]'
                     : 'text-[#A19BAD] hover:bg-white/5 hover:text-white'
                 }`}
                 data-testid={`nav-${item.id}`}
@@ -545,6 +567,45 @@ export default function GamePage() {
                 <motion.div key="admin" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                   <AdminPanel />
                 </motion.div>
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {showSeasonPass && (
+                <SeasonPassUI 
+                  season={SEASONS[0]}
+                  level={mockSeasonState.level}
+                  xp={mockSeasonState.xp}
+                  xpRequired={mockSeasonState.xpRequired}
+                  isPremium={mockSeasonState.isPremium}
+                  claimedFree={mockSeasonState.claimedFree}
+                  claimedPremium={mockSeasonState.claimedPremium}
+                  onClose={() => setShowSeasonPass(false)}
+                  onBuyPremium={() => {
+                    setMockSeasonState(prev => ({ ...prev, isPremium: true }));
+                    toast.success('Premium Pass Acquistato!');
+                  }}
+                  onClaim={(reqLevel, type) => {
+                    const claimedList = type === 'premium' ? mockSeasonState.claimedPremium : mockSeasonState.claimedFree;
+                    if (claimedList.includes(reqLevel)) {
+                      toast.error('Già riscosso!');
+                      return;
+                    }
+                    if (type === 'premium' && !mockSeasonState.isPremium) {
+                      toast.error('Richiede il Pass Premium!');
+                      return;
+                    }
+                    if (mockSeasonState.level < reqLevel) {
+                      toast.error('Livello non raggiunto!');
+                      return;
+                    }
+                    toast.success('Ricompensa riscossa!');
+                    setMockSeasonState(prev => ({
+                      ...prev,
+                      [type === 'premium' ? 'claimedPremium' : 'claimedFree']: [...claimedList, reqLevel]
+                    }));
+                  }}
+                />
               )}
             </AnimatePresence>
           </div>

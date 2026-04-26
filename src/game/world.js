@@ -265,14 +265,14 @@ export class World {
       const pos = new THREE.Vector3(wp.x + jitterX, 0, wp.z + jitterZ);
       let prop = null;
       if (zone.id === 'dungeon') {
-        if (Math.random() < 0.6) prop = spawnTorch(this.scene, new THREE.Vector3(pos.x, 1.2, pos.z));
+        if (Math.random() < 0.6) prop = spawnTorch(this.scene, new THREE.Vector3(pos.x, 0, pos.z));
         else prop = spawnPillar(this.scene, pos);
       } else if (zone.id === 'garden') {
         if (Math.random() < 0.35) prop = spawnDeadTree(this.scene, pos);
         else prop = spawnGrassTuft(this.scene, pos);
       } else if (zone.id === 'catacombs') {
         if (Math.random() < 0.7) prop = spawnSkullPile(this.scene, pos);
-        else prop = spawnTorch(this.scene, new THREE.Vector3(pos.x, 1.2, pos.z));
+        else prop = spawnTorch(this.scene, new THREE.Vector3(pos.x, 0, pos.z));
       } else if (zone.id === 'abyss') {
         prop = spawnCrystal(this.scene, pos);
       }
@@ -300,7 +300,7 @@ export class World {
           for (const n of neighbors) {
             if (grid[y + n.dz][x + n.dx] === CELL.WALL && Math.random() < 0.12) {
               const wp = cellToWorld(x, y, grid);
-              const pos = new THREE.Vector3(wp.x + n.dx * 0.45, 1.4, wp.z + n.dz * 0.45);
+              const pos = new THREE.Vector3(wp.x + n.dx * 1.42, 1.4, wp.z + n.dz * 1.42);
               const torch = spawnTorch(this.scene, pos);
               torch.rotation.y = n.rot;
               this.props.push(torch);

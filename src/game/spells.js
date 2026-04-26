@@ -9,17 +9,17 @@ import * as THREE from 'three';
 export const SPELLS = {
   fireball: {
     id: 'fireball', name: 'Palla di Fuoco', key: 'Z', mana: 30,
-    damage: 85, radius: 3.0, speed: 18, color: 0xff6020, icon: '🔥',
+    damage: 85, radius: 3.0, speed: 18, color: 0xff6020, icon: 'fireball.png', fallbackIcon: '🔥',
     desc: 'Esplode all\'impatto: danno ad area.',
   },
   heal: {
     id: 'heal', name: 'Rigenera', key: 'X', mana: 25,
-    heal: 55, color: 0x40ff80, icon: '❤',
+    heal: 55, color: 0x40ff80, icon: 'heal.png', fallbackIcon: '❤',
     desc: 'Ripristina HP istantaneamente.',
   },
   shield: {
     id: 'shield', name: 'Scudo Arcano', key: 'C', mana: 35,
-    duration: 6, reduction: 0.65, color: 0x60a0ff, icon: '🛡',
+    duration: 6, reduction: 0.65, color: 0x60a0ff, icon: 'shield.png', fallbackIcon: '🛡',
     desc: 'Riduce il danno del 65% per 6s.',
   },
 };

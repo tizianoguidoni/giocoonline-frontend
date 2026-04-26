@@ -11,6 +11,7 @@ import {
   Package, Star, X, ChevronRight, Sparkles
 } from 'lucide-react';
 import { getItemImage } from '@/data/itemImages';
+import { CharacterPreview } from './CharacterPreview';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -128,13 +129,9 @@ export default function EquipmentPanel() {
           {/* Equipment Slots Visual */}
           <div className="relative">
             <div className="aspect-square max-w-md mx-auto relative">
-              {/* Character silhouette background */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-32 h-32 rounded-full bg-[#4A3B72]/30 border-2 border-[#D4AF37]/20 flex items-center justify-center">
-                  <span className="text-4xl font-bold text-[#D4AF37]/50">
-                    {character?.name?.[0] || '?'}
-                  </span>
-                </div>
+              {/* Premium Character Preview */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                <CharacterPreview equipment={equipment} className="w-full h-full scale-[1.3] opacity-90" />
               </div>
 
               {/* 4 Equipment Slots */}

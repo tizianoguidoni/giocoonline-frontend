@@ -130,24 +130,39 @@ function CharacterPreview({ currentWeaponId }) {
   return <div ref={mountRef} style={{ width: '100%', height: '100%' }} />;
 }
 
+function Icon({ src, fallback, size = 32, style = {} }) {
+  const [error, setError] = React.useState(false);
+  const fullSrc = `/assets/icons/${src}`;
+  
+  if (error || !src) return <span style={{ fontSize: size, ...style }}>{fallback}</span>;
+  
+  return (
+    <img 
+      src={fullSrc} 
+      alt={fallback} 
+      onError={() => setError(true)}
+      style={{ width: size, height: size, objectFit: 'contain', ...style }}
+    />
+  );
+}
+
 export function InventoryUI({ state, onClose, game }) {
   if (!state) return null;
 
   // Derive inventory contents from state
-  // In state we only have strings and numbers, we should map them back to icons
   const items = [];
   
   if (state.ownedWeapons) {
     state.ownedWeapons.forEach(wId => {
       const def = WEAPONS[wId];
       if (def) {
-         items.push({ id: wId, name: def.name, icon: def.icon, qty: wId === state.weapon?.id ? "Equipaggiato" : 1 });
+         items.push({ id: wId, name: def.name, icon: def.icon, fallback: def.fallbackIcon, qty: wId === state.weapon?.id ? "Equipaggiato" : 1 });
       }
     });
   }
   
-  if (state.gems > 0) items.push({ id: 'gem', name: 'Gemma', icon: '💎', qty: state.gems });
-  if (state.keys && state.keys.length > 0) items.push({ id: 'key', name: 'Chiave', icon: '🗝', qty: state.keys.length });
+  if (state.gems > 0) items.push({ id: 'gem', name: 'Gemma', icon: 'gem.png', fallback: '💎', qty: state.gems });
+  if (state.keys && state.keys.length > 0) items.push({ id: 'key', name: 'Chiave', icon: 'key.png', fallback: '🗝', qty: state.keys.length });
 
   // Grid padding
   while(items.length < 24) items.push(null);
@@ -187,7 +202,7 @@ export function InventoryUI({ state, onClose, game }) {
               >
                 {it && (
                   <>
-                    <div style={{ fontSize: 32 }}>{it.icon}</div>
+                    <Icon src={it.icon} fallback={it.fallback} size={48} />
                     <div style={{ position: 'absolute', bottom: 4, right: 6, fontSize: 10, fontWeight: 'bold', color: '#fff' }}>{it.qty === "Equipaggiato" ? "EQ" : `x${it.qty}`}</div>
                     <div style={{ position: 'absolute', top: 4, left: 4, fontSize: 8, opacity: 0.7 }}>{it.name.substring(0, 10)}</div>
                   </>

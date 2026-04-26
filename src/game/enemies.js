@@ -71,6 +71,10 @@ export class Enemy {
     }
 
     this.mesh.position.copy(this.position);
+    // Lift FBX models if they have origin at center
+    if (this.mixer) {
+      this.mesh.position.y += 0.6; // Increased from 0.1 to 0.6 to match procedural lift
+    }
     this.mesh.userData = { type: 'enemy', instance: this };
   }
 
