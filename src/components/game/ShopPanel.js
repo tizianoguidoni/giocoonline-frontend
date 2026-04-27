@@ -36,7 +36,8 @@ const SLOT_NAMES = {
   sword: 'Spada',
   secondary: 'Colpo',
   shield: 'Scudo',
-  helmet: 'Elmo'
+  helmet: 'Elmo',
+  backpack: 'Zaino'
 };
 
 export default function ShopPanel() {
