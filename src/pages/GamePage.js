@@ -54,7 +54,8 @@ const ENEMY_IMAGES = {
 };
 
 const LOCATIONS = [
-  { id: 'town', name: 'Città Centrale', icon: Home, description: 'La capitale del regno' },
+  { id: 'home', name: 'La tua Casa', icon: Home, description: 'Riposati e gestisci il tuo inventario' },
+  { id: 'town', name: 'Città Centrale', icon: Crown, description: 'La capitale del regno' },
   { id: 'forest', name: 'Foresta Oscura', icon: MapPin, description: 'Piena di goblin e creature' },
   { id: 'dungeon', name: 'Dungeon Antico', icon: Skull, description: 'Pericolo alto, ricompense migliori' },
   { id: 'arena', name: 'Arena PvP', icon: Swords, description: 'Combatti altri giocatori' }

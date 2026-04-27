@@ -117,6 +117,12 @@ export default function EquipmentPanel() {
         return (i.subtype === category || i.item_type === category) && !i.equipped;
       });
 
+  // Backpack capacity logic
+  const hasBackpack = allItems.some(i => i.item_id === 'backpack' || i.id === 'backpack' || i.name?.toLowerCase().includes('zaino'));
+  const maxSlots = hasBackpack ? 20 : 5;
+  const totalGridSlots = 20;
+  const gridCells = Array.from({ length: totalGridSlots }, (_, i) => i);
+
   // Calculate total gear bonus
   const totalBonus = {};
   Object.values(equipment).forEach(item => {
@@ -194,11 +200,30 @@ export default function EquipmentPanel() {
           {/* Item grid */}
           <div className="inv-scroll flex-1 overflow-y-auto p-3">
             <div className="grid grid-cols-4 gap-2">
-              {filtered.map((item, i) => {
+              {gridCells.map((slotIndex) => {
+                const item = filtered[slotIndex];
+                const isLocked = slotIndex >= maxSlots;
+
+                if (isLocked) {
+                  return (
+                    <div key={slotIndex} className="relative aspect-square rounded-md border border-white/5 bg-black/40 flex items-center justify-center">
+                      <span className="text-gray-700 text-xl">🔒</span>
+                    </div>
+                  );
+                }
+
+                if (!item) {
+                  return (
+                    <div key={slotIndex} className="relative aspect-square rounded-md border border-white/5 bg-white/5 flex items-center justify-center">
+                    </div>
+                  );
+                }
+
                 const rar = RARITY[item.rarity] || RARITY.common;
                 const isSel = selected?.data?.id === item.id;
+                
                 return (
-                  <div key={i}
+                  <div key={slotIndex}
                     onClick={() => setSelected({ type: 'item', data: item })}
                     className="relative aspect-square rounded-md cursor-pointer overflow-hidden border transition-all duration-150 group"
                     style={{
@@ -228,11 +253,6 @@ export default function EquipmentPanel() {
                   </div>
                 );
               })}
-              {filtered.length === 0 && (
-                <div className="col-span-4 text-center text-gray-600 text-xs py-8 italic">
-                  Nessun oggetto disponibile
-                </div>
-              )}
             </div>
           </div>
         </div>
