@@ -16,10 +16,10 @@ const ORE_FALLBACK = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?
 
 export const ITEM_IMAGES = {
   // ─── SWORDS ──────────────────────────────────────────
-  wooden_sword:        SWORD_FALLBACK,
-  iron_sword:          SWORD_FALLBACK,
-  steel_sword:         'https://images.pexels.com/photos/1383766/pexels-photo-1383766.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
-  silver_blade:        'https://images.pexels.com/photos/1383766/pexels-photo-1383766.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
+  wooden_sword:        ICON('wooden_sword'),
+  iron_sword:          ICON('iron_sword'),
+  steel_sword:         ICON('steel_sword'),
+  silver_blade:        ICON('silver_blade'),
   flame_sword:         ICON('flame_sword'),
   dragon_slayer:       ICON('dragon_slayer'),
   frost_brand:         ICON('frost_brand'),
@@ -32,8 +32,8 @@ export const ITEM_IMAGES = {
   void_sword:          ICON('void_sword'),
 
   // ─── IN-GAME WEAPONS (Labirinto) ────────────────────
-  shortsword:          SWORD_FALLBACK,
-  warhammer:           'https://images.unsplash.com/photo-1661685991719-f56055164620?w=150&h=150&fit=crop',
+  shortsword:          ICON('shortsword'),
+  warhammer:           ICON('warhammer'),
   runebow:             ICON('runebow'),
   magestaff:           ICON('magestaff'),
   soulblade:           ICON('soul_reaper'),
@@ -47,28 +47,28 @@ export const ITEM_IMAGES = {
   death_whisper:       ICON('death_whisper'),
 
   // ─── SHIELDS ─────────────────────────────────────────
-  wooden_shield:       SHIELD_FALLBACK,
-  iron_shield:         SHIELD_FALLBACK,
-  steel_shield:        'https://images.pexels.com/photos/7695127/pexels-photo-7695127.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
-  tower_shield:        'https://images.pexels.com/photos/7695127/pexels-photo-7695127.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
-  dragon_shield:       'https://images.unsplash.com/photo-1686747506706-67418fbd612c?w=150&h=150&fit=crop',
+  wooden_shield:       ICON('aegis'),
+  iron_shield:         ICON('aegis'),
+  steel_shield:        ICON('aegis'),
+  tower_shield:        ICON('aegis'),
+  dragon_shield:       ICON('aegis'),
   aegis:               ICON('aegis'),
 
   // ─── HELMETS ─────────────────────────────────────────
-  leather_cap:         HELMET_FALLBACK,
-  iron_helmet:         HELMET_FALLBACK,
-  steel_helmet:        'https://images.unsplash.com/photo-1600081522768-cb2e80ed4491?w=150&h=150&fit=crop',
-  knight_helmet:       'https://images.unsplash.com/photo-1600081522768-cb2e80ed4491?w=150&h=150&fit=crop',
+  leather_cap:         ICON('dragon_helmet'),
+  iron_helmet:         ICON('dragon_helmet'),
+  steel_helmet:        ICON('dragon_helmet'),
+  knight_helmet:       ICON('dragon_helmet'),
   dragon_helmet:       ICON('dragon_helmet'),
   crown_of_kings:      ICON('divine_crown'),
   divine_crown:        ICON('divine_crown'),
 
   // ─── BODY ARMOR ──────────────────────────────────────
-  cloth_armor:         ARMOR_FALLBACK,
-  leather_armor:       ARMOR_FALLBACK,
-  chainmail:           ARMOR_FALLBACK,
-  plate_armor:         ARMOR_FALLBACK,
-  dragon_scale_armor:  ARMOR_FALLBACK,
+  cloth_armor:         ICON('divine_plate'),
+  leather_armor:       ICON('divine_plate'),
+  chainmail:           ICON('divine_plate'),
+  plate_armor:         ICON('divine_plate'),
+  dragon_scale_armor:  ICON('divine_plate'),
   divine_plate:        ICON('divine_plate'),
 
   // ─── POTIONS ─────────────────────────────────────────
@@ -80,11 +80,11 @@ export const ITEM_IMAGES = {
   large_mana_potion:   'https://images.pexels.com/photos/417049/pexels-photo-417049.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
 
   // ─── GEMS ────────────────────────────────────────────
-  ruby:                GEM_FALLBACK,
-  sapphire:            'https://images.unsplash.com/photo-1705575420317-daaed2ab4cf3?w=150&h=150&fit=crop',
-  emerald:             'https://images.unsplash.com/photo-1705575420317-daaed2ab4cf3?w=150&h=150&fit=crop',
-  diamond:             'https://images.pexels.com/photos/7568017/pexels-photo-7568017.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
-  legendary_gem:       'https://images.unsplash.com/photo-1772047678445-46c849baf7c5?w=150&h=150&fit=crop',
+  ruby:                '/assets/icons/gem.png',
+  sapphire:            '/assets/icons/gem.png',
+  emerald:             '/assets/icons/gem.png',
+  diamond:             '/assets/icons/gem.png',
+  legendary_gem:       '/assets/icons/gem.png',
 
   // ─── MATERIALS ───────────────────────────────────────
   iron_ore:            ORE_FALLBACK,
