@@ -151,7 +151,7 @@ export default function Maze3D({ onExit }) {
 
   if (!isAssetsLoaded) {
     return (
-      <div className="fixed inset-0 bg-[#0B0914] z-[100] flex flex-col items-center justify-center p-8">
+      <div className="absolute inset-0 bg-[#0B0914] z-50 flex flex-col items-center justify-center p-8">
         <Skull className="w-20 h-20 text-[#D4AF37] mb-8 animate-pulse" />
         <h2 className="text-2xl font-black text-white tracking-[0.3em] uppercase mb-2">CARICAMENTO LABIRINTO...</h2>
         <div className="w-64 h-1 bg-white/5 rounded-full overflow-hidden">
@@ -168,7 +168,7 @@ export default function Maze3D({ onExit }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black z-[100] overflow-hidden cursor-none select-none">
+    <div className="absolute inset-0 bg-black z-50 overflow-hidden cursor-none select-none">
       <canvas ref={canvasRef} className="w-full h-full" />
 
       {/* Game HUD Layer */}

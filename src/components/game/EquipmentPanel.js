@@ -204,10 +204,10 @@ export default function EquipmentPanel() {
                 const item = filtered[slotIndex];
                 const isLocked = slotIndex >= maxSlots;
 
-                if (isLocked) {
+                if (isLocked && !item) {
                   return (
                     <div key={slotIndex} className="relative aspect-square rounded-md border border-white/5 bg-black/40 flex items-center justify-center">
-                      <span className="text-gray-700 text-xl">🔒</span>
+                      <span className="text-gray-700 text-xl opacity-20">🔒</span>
                     </div>
                   );
                 }
@@ -225,7 +225,7 @@ export default function EquipmentPanel() {
                 return (
                   <div key={slotIndex}
                     onClick={() => setSelected({ type: 'item', data: item })}
-                    className="relative aspect-square rounded-md cursor-pointer overflow-hidden border transition-all duration-150 group"
+                    className={`relative aspect-square rounded-md cursor-pointer overflow-hidden border transition-all duration-150 group ${isLocked ? 'grayscale opacity-60' : ''}`}
                     style={{
                       borderColor: isSel ? rar.color : 'rgba(255,255,255,0.1)',
                       boxShadow: isSel ? `0 0 12px ${rar.glow}` : 'none',
@@ -236,14 +236,22 @@ export default function EquipmentPanel() {
                       className="absolute inset-0 w-full h-full object-cover transition-opacity duration-200"
                       style={{ opacity: isSel ? 0.9 : 0.55 }}
                       onError={e => { e.target.style.display = 'none'; }} />
+                    
+                    {/* Lock overlay for items above capacity */}
+                    {isLocked && (
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
+                        <span className="text-xl">🔒</span>
+                      </div>
+                    )}
+
                     {/* Rarity corner dot */}
-                    <div className="absolute top-1 right-1 w-2 h-2 rounded-full" style={{ backgroundColor: rar.color }} />
+                    <div className="absolute top-1 right-1 w-2 h-2 rounded-full z-20" style={{ backgroundColor: rar.color }} />
                     {/* Quantity badge */}
                     {item.quantity > 1 && (
-                      <span className="absolute bottom-1 right-1 text-[9px] font-bold text-white bg-black/60 rounded px-1">{item.quantity}</span>
+                      <span className="absolute bottom-1 right-1 text-[9px] font-bold text-white bg-black/60 rounded px-1 z-20">{item.quantity}</span>
                     )}
                     {/* Hover overlay with name */}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-end justify-center p-1">
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-end justify-center p-1 z-20">
                       <span className="text-[9px] text-white font-semibold text-center opacity-0 group-hover:opacity-100 transition-opacity leading-tight line-clamp-2">
                         {item.name}
                       </span>

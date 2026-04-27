@@ -456,7 +456,7 @@ export default function House3D({ onExit }) {
   }, [showChestUI, onExit]);
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: '#000' }}>
+    <div className="absolute inset-0 z-50 bg-[#0a0a0a] overflow-hidden">
       {/* HUD */}
       <div style={{ position: 'fixed', top: 16, left: 16, zIndex: 100, color: '#D4AF37', fontFamily: 'Inter, sans-serif', fontSize: 12 }}>
         <div style={{ background: 'rgba(0,0,0,0.7)', borderRadius: 8, padding: '8px 14px', border: '1px solid #D4AF3744' }}>

@@ -430,6 +430,8 @@ export default function GamePage() {
                     setShowSeasonPass(true);
                   } else {
                     setActiveTab(item.id);
+                    setIsInHouse(false);
+                    setIsInMaze(false);
                   }
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${

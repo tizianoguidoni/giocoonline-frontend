@@ -21,6 +21,13 @@ const BOSS_ICONS = {
   world: Star
 };
 
+const BOSS_IMAGES = {
+  ice_queen: '/textures/boss/ice/Elemental_LP_Ice_Elemental_Diffuse.png',
+  demon_lord: '/textures/boss/fire/Elemental_LP_Flamy_Elemental_Diffuse.png',
+  world_titan: '/textures/boss/earth/Elemental_LP_Earthen_Elemental_Diffuse.png',
+  stone_golem: '/textures/boss/earth/Elemental_LP_Earthen_Elemental_Diffuse.png',
+};
+
 const BOSS_COLORS = {
   normal: '#9CA3AF',
   rare: '#3B82F6',
@@ -143,10 +150,20 @@ export default function BossPanel() {
                   >
                     <div className="flex items-center gap-3">
                       <div 
-                        className="w-14 h-14 rounded-xl flex items-center justify-center"
-                        style={{ backgroundColor: `${color}20` }}
+                        className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden border"
+                        style={{ 
+                          borderColor: BOSS_COLORS[boss.type],
+                          backgroundColor: `${BOSS_COLORS[boss.type]}20` 
+                        }}
                       >
-                        <Icon className="w-7 h-7" style={{ color }} />
+                        {BOSS_IMAGES[boss.id] ? (
+                          <img src={BOSS_IMAGES[boss.id]} alt={boss.name} className="w-full h-full object-cover" />
+                        ) : (
+                          (() => {
+                            const Icon = BOSS_ICONS[boss.type] || Skull;
+                            return <Icon className="w-6 h-6" style={{ color: BOSS_COLORS[boss.type] }} />;
+                          })()
+                        )}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
@@ -182,16 +199,21 @@ export default function BossPanel() {
                 {/* Boss Header */}
                 <div className="text-center pb-4 border-b border-white/10">
                   <div 
-                    className="w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-3"
+                    className="w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-3 overflow-hidden border-2"
                     style={{ 
+                      borderColor: BOSS_COLORS[bossDetails.type],
                       backgroundColor: `${BOSS_COLORS[bossDetails.type]}20`,
                       boxShadow: `0 0 30px ${BOSS_COLORS[bossDetails.type]}40`
                     }}
                   >
-                    {(() => {
-                      const Icon = BOSS_ICONS[bossDetails.type] || Skull;
-                      return <Icon className="w-12 h-12" style={{ color: BOSS_COLORS[bossDetails.type] }} />;
-                    })()}
+                    {BOSS_IMAGES[selectedBoss] ? (
+                      <img src={BOSS_IMAGES[selectedBoss]} alt={bossDetails.name} className="w-full h-full object-cover" />
+                    ) : (
+                      (() => {
+                        const Icon = BOSS_ICONS[bossDetails.type] || Skull;
+                        return <Icon className="w-12 h-12" style={{ color: BOSS_COLORS[bossDetails.type] }} />;
+                      })()
+                    )}
                   </div>
                   <h3 className="text-2xl font-bold text-white">{bossDetails.name}</h3>
                   <p className="text-[#A19BAD] capitalize">{bossDetails.type} Boss • Livello {bossDetails.level}</p>
