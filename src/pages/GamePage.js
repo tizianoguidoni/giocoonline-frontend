@@ -29,15 +29,20 @@ import ShopPanel from '@/components/game/ShopPanel';
 import EquipmentPanel from '@/components/game/EquipmentPanel';
 import Maze3D from '@/components/game/Maze3D';
 import House3D from '@/components/game/House3D';
+import Arena3D from '@/components/game/Arena3D';
 import { SeasonPassUI } from '@/components/game/SeasonPassUI';
 import { SEASONS } from '@/game/SeasonPassSystem';
 
 // Avatar images for different classes
 const CLASS_AVATARS = {
   warrior: 'https://images.unsplash.com/photo-1699500325919-8d5aaf21d0da?w=200&h=200&fit=crop',
+  guerriero: 'https://images.unsplash.com/photo-1699500325919-8d5aaf21d0da?w=200&h=200&fit=crop',
   mage: 'https://images.unsplash.com/photo-1636005811079-ea1b09d86e5a?w=200&h=200&fit=crop',
+  mago: 'https://images.unsplash.com/photo-1636005811079-ea1b09d86e5a?w=200&h=200&fit=crop',
   assassin: 'https://images.unsplash.com/photo-1541727261696-8680e53c1149?w=200&h=200&fit=crop',
-  healer: 'https://images.unsplash.com/photo-1659489727971-4bbee4d4b312?w=200&h=200&fit=crop'
+  assassino: 'https://images.unsplash.com/photo-1541727261696-8680e53c1149?w=200&h=200&fit=crop',
+  healer: 'https://images.unsplash.com/photo-1659489727971-4bbee4d4b312?w=200&h=200&fit=crop',
+  curatore: 'https://images.unsplash.com/photo-1659489727971-4bbee4d4b312?w=200&h=200&fit=crop'
 };
 
 // Enemy images  
@@ -93,6 +98,8 @@ export default function GamePage() {
   const [inCombat, setInCombat] = useState(false);
   const [isInMaze, setIsInMaze] = useState(false);
   const [isInHouse, setIsInHouse] = useState(false);
+  const [isInArena, setIsInArena] = useState(false);
+  const [selectedArenaBoss, setSelectedArenaBoss] = useState(null);
   const [showSeasonPass, setShowSeasonPass] = useState(false);
   const chatEndRef = useRef(null);
 
@@ -409,6 +416,7 @@ export default function GamePage() {
           {/* Navigation Tabs */}
           <nav className="space-y-1">
             {[
+              { id: 'home', icon: Home, label: 'La tua Casa' },
               { id: 'combat', icon: Swords, label: 'Combattimento' },
               { id: 'bosses', icon: Skull, label: 'Boss' },
               { id: 'shop', icon: ShoppingBag, label: 'Negozio' },
@@ -428,10 +436,25 @@ export default function GamePage() {
                 onClick={() => {
                   if (item.id === 'seasonpass') {
                     setShowSeasonPass(true);
+                  } else if (item.id === 'home') {
+                    setActiveTab('combat');
+                    setCurrentLocation(LOCATIONS[0]);
+                    setIsInHouse(false);
+                    setIsInMaze(false);
+                    setIsInArena(false);
+                  } else if (item.id === 'combat') {
+                    setActiveTab('combat');
+                    if (currentLocation.id === 'home') {
+                      setCurrentLocation(LOCATIONS[2]); // Default to Forest for combat
+                    }
+                    setIsInHouse(false);
+                    setIsInMaze(false);
+                    setIsInArena(false);
                   } else {
                     setActiveTab(item.id);
                     setIsInHouse(false);
                     setIsInMaze(false);
+                    setIsInArena(false);
                   }
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
@@ -452,6 +475,16 @@ export default function GamePage() {
 
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col overflow-hidden">
+          {isInArena && (
+            <Arena3D 
+              bossData={selectedArenaBoss} 
+              onExit={() => {
+                setIsInArena(false);
+                setSelectedArenaBoss(null);
+                refreshCharacter();
+              }} 
+            />
+          )}
           {/* Combat/Game Area */}
           <div className="flex-1 overflow-auto p-4">
             <AnimatePresence mode="wait">
@@ -556,7 +589,10 @@ export default function GamePage() {
               
               {activeTab === 'bosses' && (
                 <motion.div key="bosses" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                  <BossPanel />
+                  <BossPanel onStartArena={(boss) => {
+                    setSelectedArenaBoss(boss);
+                    setIsInArena(true);
+                  }} />
                 </motion.div>
               )}
               

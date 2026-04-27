@@ -32,11 +32,11 @@ export const ITEM_IMAGES = {
   void_sword:          ICON('void_sword'),
 
   // ─── IN-GAME WEAPONS (Labirinto) ────────────────────
-  shortsword:          ICON('shortsword'),
-  warhammer:           ICON('warhammer'),
-  runebow:             ICON('runebow'),
-  magestaff:           ICON('magestaff'),
-  soulblade:           ICON('soul_reaper'),
+  shortsword:          '/assets/icons/shortsword.png',
+  warhammer:           '/assets/icons/warhammer.png',
+  runebow:             '/assets/icons/runebow.png',
+  magestaff:           '/assets/icons/magestaff.png',
+  soulblade:           '/assets/icons/soulblade.png',
 
   // ─── DAGGERS ─────────────────────────────────────────
   wooden_dagger:       DAGGER_FALLBACK,
@@ -72,19 +72,19 @@ export const ITEM_IMAGES = {
   divine_plate:        ICON('divine_plate'),
 
   // ─── POTIONS ─────────────────────────────────────────
-  small_health_potion: POTION_FALLBACK,
-  medium_health_potion:POTION_FALLBACK,
-  large_health_potion: 'https://images.pexels.com/photos/417049/pexels-photo-417049.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
-  small_mana_potion:   POTION_FALLBACK,
-  medium_mana_potion:  POTION_FALLBACK,
-  large_mana_potion:   'https://images.pexels.com/photos/417049/pexels-photo-417049.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
+  small_health_potion: '/assets/icons/hp.png',
+  medium_health_potion:'/assets/icons/hp.png',
+  large_health_potion: '/assets/icons/hp.png',
+  small_mana_potion:   '/assets/icons/mana.png',
+  medium_mana_potion:  '/assets/icons/mana.png',
+  large_mana_potion:   '/assets/icons/mana.png',
 
   // ─── GEMS ────────────────────────────────────────────
-  ruby:                '/assets/icons/gem.png',
-  sapphire:            '/assets/icons/gem.png',
-  emerald:             '/assets/icons/gem.png',
-  diamond:             '/assets/icons/gem.png',
-  legendary_gem:       '/assets/icons/gem.png',
+  ruby:                GEM_FALLBACK,
+  sapphire:            GEM_FALLBACK,
+  emerald:             GEM_FALLBACK,
+  diamond:             GEM_FALLBACK,
+  legendary_gem:       GEM_FALLBACK,
 
   // ─── MATERIALS ───────────────────────────────────────
   iron_ore:            ORE_FALLBACK,

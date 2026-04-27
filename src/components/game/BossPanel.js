@@ -35,7 +35,7 @@ const BOSS_COLORS = {
   world: '#F59E0B'
 };
 
-export default function BossPanel() {
+export default function BossPanel({ onStartArena }) {
   const { t } = useTranslation();
   const { character, refreshCharacter } = useAuth();
   const [bosses, setBosses] = useState([]);
@@ -305,7 +305,7 @@ export default function BossPanel() {
 
                 {/* Fight Button */}
                 <Button
-                  onClick={handleFight}
+                  onClick={() => onStartArena ? onStartArena(bossDetails) : handleFight()}
                   disabled={!canFight(selectedBoss) || fighting}
                   className={`w-full py-4 rounded-xl text-lg ${
                     canFight(selectedBoss) 
@@ -322,7 +322,7 @@ export default function BossPanel() {
                   ) : (
                     <>
                       <Swords className="w-5 h-5 mr-2" />
-                      Combatti Boss
+                      Entra in Arena
                     </>
                   )}
                 </Button>

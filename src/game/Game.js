@@ -21,9 +21,10 @@ const PLAYER_SPEED = 4.2;
 const PLAYER_SPRINT = 7.2;
 
 export class Game {
-  constructor(canvas, onEvent) {
+  constructor(canvas, onEvent, characterData = null) {
     this.canvas = canvas;
     this.onEvent = onEvent || (() => {});
+    this.characterData = characterData;
 
     // three core
     this.renderer = new THREE.WebGLRenderer({
@@ -103,6 +104,15 @@ export class Game {
     // Weapons
     this.weapons = new WeaponSystem(this.scene, this.camera);
     this.weapons.setWallMeshes(this.world.wallMeshes);
+    
+    // Set equipped weapon from character data
+    if (this.characterData?.equipment?.sword) {
+      const equippedId = this.characterData.equipment.sword;
+      if (WEAPONS[equippedId]) {
+        this.weapons.ownWeapon(equippedId);
+        this.weapons.switchWeapon(equippedId);
+      }
+    }
 
     // Particles (ambient dust, reduced count for perf)
     this.particles = buildParticles(this.scene, 0x886644, 120);

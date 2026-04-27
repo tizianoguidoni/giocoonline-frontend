@@ -130,7 +130,7 @@ export default function Maze3D({ onExit }) {
   useEffect(() => {
     if (isAssetsLoaded && canvasRef.current && !gameRef.current) {
       console.log("Maze3D: Starting Game...");
-      const g = new Game(canvasRef.current, handleEvent);
+      const g = new Game(canvasRef.current, handleEvent, character);
       gameRef.current = g;
       g.start();
       
