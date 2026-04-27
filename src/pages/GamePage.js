@@ -28,6 +28,7 @@ import BossPanel from '@/components/game/BossPanel';
 import ShopPanel from '@/components/game/ShopPanel';
 import EquipmentPanel from '@/components/game/EquipmentPanel';
 import Maze3D from '@/components/game/Maze3D';
+import House3D from '@/components/game/House3D';
 import { SeasonPassUI } from '@/components/game/SeasonPassUI';
 import { SEASONS } from '@/game/SeasonPassSystem';
 
@@ -91,6 +92,7 @@ export default function GamePage() {
   const [turnTimer, setTurnTimer] = useState(5);
   const [inCombat, setInCombat] = useState(false);
   const [isInMaze, setIsInMaze] = useState(false);
+  const [isInHouse, setIsInHouse] = useState(false);
   const [showSeasonPass, setShowSeasonPass] = useState(false);
   const chatEndRef = useRef(null);
 
@@ -459,7 +461,9 @@ export default function GamePage() {
                   exit={{ opacity: 0 }}
                   className="h-full w-full relative"
                 >
-                  {isInMaze ? (
+                  {isInHouse ? (
+                    <House3D onExit={() => { setIsInHouse(false); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); }} />
+                  ) : isInMaze ? (
                     <Maze3D onExit={async (results) => {
                       setIsInMaze(false);
                       if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
@@ -474,39 +478,47 @@ export default function GamePage() {
                         } catch (err) { console.error(err); toast.error("Errore salvataggio!"); }
                       }
                     }} />
+                  ) : currentLocation.id === 'home' ? (
+                    <div className="h-full flex flex-col items-center justify-center p-8 text-center">
+                      <div className="max-w-2xl gold-framed-panel p-12 bg-black/60 backdrop-blur-md rounded-3xl shadow-[0_0_50px_rgba(139,90,43,0.2)]">
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="mb-8">
+                          <Home className="w-24 h-24 text-[#D4AF37] mx-auto mb-6 drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]" />
+                          <h2 className="text-4xl font-black text-white tracking-[0.2em] uppercase mb-4">LA TUA CASA</h2>
+                          <div className="h-1 w-32 bg-[#D4AF37] mx-auto mb-6" />
+                          <p className="text-[#A19BAD] text-lg leading-relaxed max-w-md mx-auto">
+                            Il tuo rifugio personale. Esplora la stanza in 3D,
+                            conserva oggetti nel forziere e goditi il panorama.
+                            <br/><span className="text-[#D4AF37]/60 text-sm mt-4 block italic">
+                              Movimento: WASD · Guarda: Mouse · Interagisci: Click
+                            </span>
+                          </p>
+                        </motion.div>
+                        <div className="flex justify-center">
+                          <Button onClick={() => { setIsInHouse(true); document.documentElement.requestFullscreen().catch(() => {}); }}
+                            className="px-16 py-10 bg-gradient-to-r from-[#8B5A2B] to-[#D4AF37] text-black font-black text-2xl hover:scale-110 active:scale-95 transition-all rounded-2xl shadow-[0_15px_40px_rgba(139,90,43,0.4)] group">
+                            <span className="group-hover:tracking-widest transition-all">🏠 ENTRA IN CASA</span>
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
                   ) : (
                     <div className="h-full flex flex-col items-center justify-center p-8 text-center">
                       <div className="max-w-2xl gold-framed-panel p-12 bg-black/60 backdrop-blur-md rounded-3xl shadow-[0_0_50px_rgba(212,175,55,0.15)]">
-                        <motion.div 
-                          initial={{ scale: 0.9, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          className="mb-8"
-                        >
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="mb-8">
                           <Skull className="w-24 h-24 text-[#D4AF37] mx-auto mb-6 drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]" />
-                          <h2 className="text-4xl font-black text-white tracking-[0.2em] uppercase mb-4">
-                            IL LABIRINTO DI SANGUE
-                          </h2>
+                          <h2 className="text-4xl font-black text-white tracking-[0.2em] uppercase mb-4">IL LABIRINTO DI SANGUE</h2>
                           <div className="h-1 w-32 bg-[#D4AF37] mx-auto mb-6" />
                           <p className="text-[#A19BAD] text-lg leading-relaxed max-w-md mx-auto">
                             Sei pronto ad affrontare le profondità? 
                             Ti aspettano Orchi, Goblin e pericoli striscianti.
-                            <br/>
-                            <span className="text-[#D4AF37]/60 text-sm mt-4 block italic">
+                            <br/><span className="text-[#D4AF37]/60 text-sm mt-4 block italic">
                               Il gioco verrà avviato a schermo intero per la massima immersione.
                             </span>
                           </p>
                         </motion.div>
-
                         <div className="flex justify-center">
-                          <Button 
-                            onClick={() => {
-                              setIsInMaze(true);
-                              document.documentElement.requestFullscreen().catch(() => {
-                                console.warn("Fullscreen request failed");
-                              });
-                            }}
-                            className="px-16 py-10 bg-gradient-to-r from-[#D4AF37] to-[#B58E29] text-black font-black text-2xl hover:scale-110 active:scale-95 transition-all rounded-2xl shadow-[0_15px_40px_rgba(212,175,55,0.4)] group"
-                          >
+                          <Button onClick={() => { setIsInMaze(true); document.documentElement.requestFullscreen().catch(() => { console.warn("Fullscreen request failed"); }); }}
+                            className="px-16 py-10 bg-gradient-to-r from-[#D4AF37] to-[#B58E29] text-black font-black text-2xl hover:scale-110 active:scale-95 transition-all rounded-2xl shadow-[0_15px_40px_rgba(212,175,55,0.4)] group">
                             <span className="group-hover:tracking-widest transition-all">ACCETTA LA SFIDA</span>
                           </Button>
                         </div>
