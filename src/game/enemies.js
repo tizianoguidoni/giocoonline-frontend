@@ -180,10 +180,10 @@ export class Enemy {
 
     this.mesh.position.copy(this.position);
     // Maintain vertical offset for FBX models
-    if (this.mixer) {
-      this.mesh.position.y += 0.6;
+    if (this.usingFBX) {
+      this.mesh.position.y += 1.6;
     } else {
-      this.mesh.position.y += 0.0; // Procedural already handles it in _buildProceduralMesh
+      this.mesh.position.y += 0.5; // Procedural already handles it in _buildProceduralMesh, but add a slight lift just in case
     }
     
     // Billboard health bar

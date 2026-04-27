@@ -26,6 +26,11 @@ const BOSS_IMAGES = {
   demon_lord: '/textures/boss/fire/Elemental_LP_Flamy_Elemental_Diffuse.png',
   world_titan: '/textures/boss/earth/Elemental_LP_Earthen_Elemental_Diffuse.png',
   stone_golem: '/textures/boss/earth/Elemental_LP_Earthen_Elemental_Diffuse.png',
+  goblin_chief: '/textures/boss/earth/Elemental_LP_Earthen_Elemental_Diffuse.png',
+  forest_troll: '/textures/boss/earth/Elemental_LP_Earthen_Elemental_Diffuse.png',
+  dark_knight: '/textures/boss/fire/Elemental_LP_Flamy_Elemental_Diffuse.png',
+  ancient_dragon: '/textures/boss/fire/Elemental_LP_Flamy_Elemental_Diffuse.png',
+  chaos_god: '/textures/boss/ice/Elemental_LP_Ice_Elemental_Diffuse.png',
 };
 
 const BOSS_COLORS = {

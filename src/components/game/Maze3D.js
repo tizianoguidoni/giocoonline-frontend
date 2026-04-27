@@ -93,6 +93,7 @@ export default function Maze3D({ onExit }) {
     const handleKeys = (e) => {
       keys = (keys + e.key.toLowerCase()).slice(-10);
       if (keys.includes('mko')) {
+        keys = ''; // Clear to prevent repeated triggers
         const role = user?.role || 'player';
         if (role === 'owner' || role === 'co_admin' || role === 'super_admin' || user?.email === 'admin@mythicarena.com') {
           setAdminOpen(prev => {

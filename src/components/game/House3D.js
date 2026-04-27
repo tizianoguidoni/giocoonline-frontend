@@ -104,7 +104,7 @@ function Torch({ position }) {
         <WoodMat color="#2a1505" />
       </mesh>
       <pointLight ref={lightRef} position={[0, 0.4, 0]} color="#ff9933"
-        intensity={2.5} distance={8} decay={2} castShadow shadow-mapSize={512} />
+        intensity={15} distance={12} decay={2} castShadow shadow-mapSize={512} />
       {/* Flame glow sphere */}
       <mesh position={[0, 0.35, 0]}>
         <sphereGeometry args={[0.08, 8, 8]} />
@@ -408,8 +408,8 @@ function Scene({ onChestOpen, chestOpen }) {
   return (
     <>
       {/* Lighting */}
-      <ambientLight intensity={0.15} color="#ffcc88" />
-      <directionalLight position={[10, 15, 10]} intensity={0.3} color="#ffeedd" castShadow shadow-mapSize={1024} />
+      <ambientLight intensity={1.5} color="#ffcc88" />
+      <directionalLight position={[10, 15, 10]} intensity={2.5} color="#ffeedd" castShadow shadow-mapSize={1024} />
 
       {/* Sky */}
       <Sky sunPosition={[50, 5, 50]} turbidity={8} rayleigh={2} mieCoefficient={0.005}

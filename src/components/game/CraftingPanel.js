@@ -11,6 +11,7 @@ import {
   Hammer, Package, Coins, AlertTriangle, CheckCircle,
   ChevronRight, Sparkles, Flame, Shield, Swords
 } from 'lucide-react';
+import { getItemImage } from '../../data/itemImages';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -133,14 +134,14 @@ export default function CraftingPanel() {
                   >
                     <div className="flex items-center gap-3">
                       <div 
-                        className="w-12 h-12 rounded-lg flex items-center justify-center"
+                        className="w-12 h-12 rounded-lg flex items-center justify-center overflow-hidden"
                         style={{ backgroundColor: `${RARITY_COLORS[recipe.result_rarity]}20` }}
                       >
-                        {recipe.result_rarity === 'legendary' ? (
-                          <Sparkles className="w-6 h-6" style={{ color: RARITY_COLORS[recipe.result_rarity] }} />
-                        ) : (
-                          <Package className="w-6 h-6" style={{ color: RARITY_COLORS[recipe.result_rarity] }} />
-                        )}
+                        <img 
+                          src={getItemImage(recipe.result_item)} 
+                          alt={recipe.result_name} 
+                          className="w-8 h-8 object-contain" 
+                        />
                       </div>
                       <div className="flex-1">
                         <h4 className="text-white font-semibold">{recipe.result_name}</h4>
@@ -165,10 +166,14 @@ export default function CraftingPanel() {
               <div className="space-y-4">
                 <div className="text-center pb-4 border-b border-white/10">
                   <div 
-                    className="w-20 h-20 mx-auto rounded-xl flex items-center justify-center mb-3"
-                    style={{ backgroundColor: `${RARITY_COLORS[selectedRecipe.result_rarity]}20` }}
+                    className="w-20 h-20 mx-auto rounded-xl flex items-center justify-center mb-3 overflow-hidden"
+                    style={{ backgroundColor: `${RARITY_COLORS[selectedRecipe.result_rarity]}20`, border: `2px solid ${RARITY_COLORS[selectedRecipe.result_rarity]}` }}
                   >
-                    <Sparkles className="w-10 h-10" style={{ color: RARITY_COLORS[selectedRecipe.result_rarity] }} />
+                    <img 
+                      src={getItemImage(selectedRecipe.result_item)} 
+                      alt={selectedRecipe.result_name} 
+                      className="w-14 h-14 object-contain" 
+                    />
                   </div>
                   <h3 
                     className="text-xl font-bold"

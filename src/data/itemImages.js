@@ -73,26 +73,26 @@ export const ITEM_IMAGES = {
 
   // ─── POTIONS ─────────────────────────────────────────
   small_health_potion: '/assets/icons/hp.png',
-  medium_health_potion:'/assets/icons/hp.png',
-  large_health_potion: '/assets/icons/hp.png',
+  medium_health_potion: '/assets/icons/hp.png',
+  large_health_potion: '/assets/icons/heal.png',
   small_mana_potion:   '/assets/icons/mana.png',
   medium_mana_potion:  '/assets/icons/mana.png',
   large_mana_potion:   '/assets/icons/mana.png',
 
   // ─── GEMS ────────────────────────────────────────────
-  ruby:                GEM_FALLBACK,
-  sapphire:            GEM_FALLBACK,
-  emerald:             GEM_FALLBACK,
-  diamond:             GEM_FALLBACK,
-  legendary_gem:       GEM_FALLBACK,
+  ruby:                '/assets/icons/gem.png',
+  sapphire:            '/assets/icons/gem.png',
+  emerald:             '/assets/icons/gem.png',
+  diamond:             '/assets/icons/gem.png',
+  legendary_gem:       '/assets/icons/gem.png',
 
   // ─── MATERIALS ───────────────────────────────────────
-  iron_ore:            ORE_FALLBACK,
-  silver_ore:          ORE_FALLBACK,
-  gold_ore:            'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=150&h=150&fit=crop',
-  mithril_ore:         'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=150&h=150&fit=crop',
-  dragon_scale:        'https://images.unsplash.com/photo-1577401239170-897942555fb3?w=150&h=150&fit=crop',
-  phoenix_feather:     ORE_FALLBACK,
+  iron_ore:            '/assets/icons/gold.png',
+  silver_ore:          '/assets/icons/gold.png',
+  gold_ore:            '/assets/icons/gold.png',
+  mithril_ore:         '/assets/icons/gold.png',
+  dragon_scale:        '/assets/icons/gold.png',
+  phoenix_feather:     '/assets/icons/gold.png',
 };
 
 // Default image for items without specific images
