@@ -185,65 +185,91 @@ export function CharacterPreview({ equipment = {}, className = "", style = {} })
       }
     } 
     
-    // Fallback if no assetManager or model fails (Premium Mannequin)
+    // Fallback if no assetManager or model fails (Humanoid Mannequin)
     if (charGroup.children.length === 0) {
-      // Crystal / Dark Magic material
-      const bodyMat = new THREE.MeshPhysicalMaterial({ 
-        color: 0x1a1525, 
-        metalness: 0.9, 
-        roughness: 0.1,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.1,
-        emissive: 0x3a1555,
-        emissiveIntensity: 0.2
+      // Skin material
+      const textureLoader = new THREE.TextureLoader();
+      const faceTexture = textureLoader.load('/icons/face.png');
+      
+      const skinMat = new THREE.MeshStandardMaterial({ 
+        color: 0xd2b48c, // Skin tone
+        roughness: 0.6,
+        metalness: 0.1
+      });
+
+      const faceMat = new THREE.MeshStandardMaterial({
+        map: faceTexture,
+        roughness: 0.6,
+        metalness: 0.1
       });
       
-      const jointMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 1, roughness: 0.2 });
+      // Leather Armor material
+      const armorMat = new THREE.MeshStandardMaterial({ 
+        color: 0x3d2b1f, // Dark leather brown
+        roughness: 0.8,
+        metalness: 0.3
+      });
+
+      // Iron detail material
+      const ironMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.8, roughness: 0.4 });
       
       // Torso
-      const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.25, 0.4, 4, 16), bodyMat);
+      const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.15, 0.6, 16), armorMat);
       torso.position.y = 0.9;
       
-      // Head
-      const headGroup = new THREE.Group();
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.18, 32, 32), bodyMat);
-      
-      // Glowing Eyes
-      const eyeMat = new THREE.MeshBasicMaterial({ color: mainColor });
-      const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 8), eyeMat);
-      eyeL.position.set(0.06, 0.05, 0.16);
-      const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 8), eyeMat);
-      eyeR.position.set(-0.06, 0.05, 0.16);
-      
-      headGroup.add(head, eyeL, eyeR);
-      headGroup.position.y = 1.6;
-      
-      // Neck ring
-      const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.1, 16), jointMat);
-      neck.position.y = 1.4;
+      // Belt
+      const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.05, 16), ironMat);
+      belt.position.y = 0.6;
 
-      // Arms
-      const armL = new THREE.Mesh(new THREE.CapsuleGeometry(0.08, 0.4, 4, 16), bodyMat);
-      armL.position.set(0.4, 0.8, 0);
+      // Head
+      // Use array of materials for sphere: map doesn't map perfectly on sphere, but better on box or specific uv.
+      // A BoxGeometry with face on front is easier for pixel art / face texture
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, 0.25), [
+        skinMat, // right
+        skinMat, // left
+        skinMat, // top
+        skinMat, // bottom
+        faceMat, // front
+        skinMat  // back
+      ]);
+      head.position.y = 1.35;
+      
+      // Neck
+      const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 0.1, 16), skinMat);
+      neck.position.y = 1.2;
+
+      // Arms (Shoulders + Arms)
+      const shoulderL = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 16), armorMat);
+      shoulderL.position.set(0.25, 1.1, 0);
+      const armL = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.4, 16), armorMat);
+      armL.position.set(0.35, 0.9, 0);
       armL.rotation.z = Math.PI / 8;
       
-      const armR = new THREE.Mesh(new THREE.CapsuleGeometry(0.08, 0.4, 4, 16), bodyMat);
-      armR.position.set(-0.4, 0.8, 0);
+      const shoulderR = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 16), armorMat);
+      shoulderR.position.set(-0.25, 1.1, 0);
+      const armR = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.4, 16), armorMat);
+      armR.position.set(-0.35, 0.9, 0);
       armR.rotation.z = -Math.PI / 8;
 
-      // Floating spheres for hands
-      const handL = new THREE.Mesh(new THREE.SphereGeometry(0.06, 16, 16), jointMat);
-      handL.position.set(0.55, 0.4, 0);
-      const handR = new THREE.Mesh(new THREE.SphereGeometry(0.06, 16, 16), jointMat);
-      handR.position.set(-0.55, 0.4, 0);
+      // Hands
+      const handL = new THREE.Mesh(new THREE.SphereGeometry(0.06, 16, 16), skinMat);
+      handL.position.set(0.45, 0.65, 0);
+      const handR = new THREE.Mesh(new THREE.SphereGeometry(0.06, 16, 16), skinMat);
+      handR.position.set(-0.45, 0.65, 0);
 
       // Legs
-      const legL = new THREE.Mesh(new THREE.CapsuleGeometry(0.1, 0.5, 4, 16), bodyMat);
-      legL.position.set(0.15, 0.25, 0);
-      const legR = new THREE.Mesh(new THREE.CapsuleGeometry(0.1, 0.5, 4, 16), bodyMat);
-      legR.position.set(-0.15, 0.25, 0);
+      const legL = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.06, 0.5, 16), armorMat);
+      legL.position.set(0.1, 0.35, 0);
+      const legR = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.06, 0.5, 16), armorMat);
+      legR.position.set(-0.1, 0.35, 0);
 
-      charGroup.add(torso, headGroup, neck, armL, armR, handL, handR, legL, legR);
+      // Feet
+      const footL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.15), ironMat);
+      footL.position.set(0.1, 0.05, 0.02);
+      const footR = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.15), ironMat);
+      footR.position.set(-0.1, 0.05, 0.02);
+
+      charGroup.add(torso, belt, head, neck, shoulderL, shoulderR, armL, armR, handL, handR, legL, legR, footL, footR);
       charGroup.position.y = -0.5;
 
       // Re-apply equipment visuals to procedural mesh
@@ -274,20 +300,26 @@ export function CharacterPreview({ equipment = {}, className = "", style = {} })
         swordGroup.add(handle, guard, blade, core);
         swordGroup.scale.setScalar(0.001);
         animatedItems.push({ mesh: swordGroup, targetScale: 0.6 });
-        swordGroup.position.set(0.55, 0.4, 0.3); // In right hand
-        swordGroup.rotation.set(Math.PI/2, 0, 0);
+        // Place in right hand (which is left side of screen)
+        swordGroup.position.set(0.45, 0.65, 0.1); 
+        swordGroup.rotation.set(Math.PI/2.5, 0, 0);
         charGroup.add(swordGroup);
       }
 
       const hId = equipment.helmet?.item_id || equipment.helmet?.id;
       if (hId) {
-        const helmMat = new THREE.MeshStandardMaterial({ color: equipment.helmet?.rarity === 'legendary' ? 0xd4af37 : 0xaaaaaa, metalness: 0.9, roughness: 0.1 });
-        const helmMesh = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.05, 16, 32), helmMat);
-        helmMesh.scale.setScalar(0.001);
-        animatedItems.push({ mesh: helmMesh, targetScale: 1.0 });
-        helmMesh.rotation.x = Math.PI / 2;
-        helmMesh.position.set(0, 1.8, 0); // Halo above head
-        charGroup.add(helmMesh);
+        const helmMat = new THREE.MeshStandardMaterial({ color: equipment.helmet?.rarity === 'legendary' ? 0xd4af37 : 0x444444, metalness: 0.8, roughness: 0.3 });
+        // Replace halo with a proper helmet shape
+        const helmGroup = new THREE.Group();
+        const helmBase = new THREE.Mesh(new THREE.BoxGeometry(0.27, 0.27, 0.27), helmMat);
+        const helmVisor = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.1, 0.28), new THREE.MeshStandardMaterial({color: 0x111111, metalness: 0.9}));
+        helmVisor.position.y = 0.05;
+        helmGroup.add(helmBase, helmVisor);
+        
+        helmGroup.scale.setScalar(0.001);
+        animatedItems.push({ mesh: helmGroup, targetScale: 1.0 });
+        helmGroup.position.set(0, 1.35, 0); // On head
+        charGroup.add(helmGroup);
       }
 
       const sId = equipment.shield?.item_id || equipment.shield?.id;
@@ -312,9 +344,9 @@ export function CharacterPreview({ equipment = {}, className = "", style = {} })
 
         shieldGroup.add(base, rim, crest);
         shieldGroup.scale.setScalar(0.001);
-        animatedItems.push({ mesh: shieldGroup, targetScale: 1.0 });
-        shieldGroup.rotation.y = -Math.PI / 4;
-        shieldGroup.position.set(-0.55, 0.4, 0.2); // On left arm
+        animatedItems.push({ mesh: shieldGroup, targetScale: 0.8 });
+        shieldGroup.rotation.y = -Math.PI / 6;
+        shieldGroup.position.set(-0.45, 0.65, 0.1); // On left arm
         charGroup.add(shieldGroup);
       }
 

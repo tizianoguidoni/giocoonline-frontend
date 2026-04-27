@@ -239,10 +239,18 @@ export default function EquipmentPanel() {
 
         {/* ═══ CENTER: Character Preview ═══ */}
         <div className="flex-1 flex flex-col items-center justify-between py-4 px-2 relative">
+          
+          {/* Tavern Background */}
+          <div className="absolute inset-0 z-0 pointer-events-none rounded-xl overflow-hidden shadow-inner">
+            <img src="/icons/tavern_bg.png" alt="Tavern Background" className="w-full h-full object-cover opacity-40 mix-blend-screen" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0a0c14] via-transparent to-[#0a0c14]/80" />
+            <div className="absolute inset-0 bg-gradient-to-x from-[#0a0c14] via-transparent to-[#0a0c14]" />
+          </div>
+
           {/* 3D Character */}
-          <div className="flex-1 w-full max-w-[340px] relative">
+          <div className="flex-1 w-full max-w-[340px] relative z-10">
             {/* Atmospheric ground glow */}
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-48 h-8 bg-blue-500/20 rounded-full blur-xl" />
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-64 h-12 bg-orange-500/10 rounded-full blur-2xl" />
             <CharacterPreview equipment={equipment} />
           </div>
 
