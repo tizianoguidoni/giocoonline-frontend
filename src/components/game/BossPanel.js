@@ -22,15 +22,15 @@ const BOSS_ICONS = {
 };
 
 const BOSS_IMAGES = {
-  ice_queen: '/textures/boss/ice/Elemental_LP_Ice_Elemental_Diffuse.png',
-  demon_lord: '/textures/boss/fire/Elemental_LP_Flamy_Elemental_Diffuse.png',
-  world_titan: '/textures/boss/earth/Elemental_LP_Earthen_Elemental_Diffuse.png',
-  stone_golem: '/textures/boss/earth/Elemental_LP_Earthen_Elemental_Diffuse.png',
-  goblin_chief: '/textures/boss/earth/Elemental_LP_Earthen_Elemental_Diffuse.png',
-  forest_troll: '/textures/boss/earth/Elemental_LP_Earthen_Elemental_Diffuse.png',
-  dark_knight: '/textures/boss/fire/Elemental_LP_Flamy_Elemental_Diffuse.png',
-  ancient_dragon: '/textures/boss/fire/Elemental_LP_Flamy_Elemental_Diffuse.png',
-  chaos_god: '/textures/boss/ice/Elemental_LP_Ice_Elemental_Diffuse.png',
+  ice_queen: '/assets/boss/ice_queen.png',
+  demon_lord: '/assets/boss/demon_lord.png',
+  world_titan: '/assets/boss/world_titan.png',
+  stone_golem: '/assets/boss/world_titan.png', // Fallback se non c'è stone golem dedicato
+  goblin_chief: '/assets/boss/goblin_chief.png',
+  forest_troll: '/assets/boss/forest_troll.png',
+  dark_knight: '/assets/boss/dark_knight.png',
+  ancient_dragon: '/assets/boss/ancient_dragon.png',
+  chaos_god: '/assets/boss/chaos_god.png',
 };
 
 const BOSS_COLORS = {
