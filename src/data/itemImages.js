@@ -10,6 +10,8 @@ const ARMATURA = (name) => `/icons/armature/${name}.png`;
 const GEMMA = (name) => `/icons/gemme/${name}.png`;
 const POZIONE = (name) => `/icons/pozioni/${name}.png`;
 const ZAINO = (name) => `/icons/zaini/${name}.png`;
+const METALLO = (name) => `/icons/metalli/${name}.png`;
+const SPECIALE = (name) => `/icons/speciali/${name}.png`;
 
 // Pexels/Unsplash fallbacks for items without custom icons
 const SWORD_FALLBACK = 'https://images.pexels.com/photos/6414375/pexels-photo-6414375.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop';
@@ -94,18 +96,21 @@ export const ITEM_IMAGES = {
   legendary_gem:       GEMMA('diamond'), // Fallback
 
   // ─── MATERIALS ───────────────────────────────────────
-  iron_ore:            '/assets/icons/gold.png',
-  silver_ore:          '/assets/icons/gold.png',
-  gold_ore:            '/assets/icons/gold.png',
-  mithril_ore:         '/assets/icons/gold.png',
-  dragon_scale:        '/assets/icons/gold.png',
-  phoenix_feather:     '/assets/icons/gold.png',
+  iron_ore:            METALLO('iron_ore'),
+  silver_ore:          METALLO('silver_ore'),
+  gold_ore:            METALLO('gold_ore'),
+  mithril_ore:         METALLO('mithril_ore'),
+  dragon_scale:        SPECIALE('dragon_scale'),
+  phoenix_feather:     SPECIALE('phoenix_feather'),
 
   // ─── BACKPACKS ───────────────────────────────────────
   small_backpack:      ZAINO('backpack_small'),
   leather_backpack:    ZAINO('backpack_medium'),
   adventurer_backpack: ZAINO('backpack_large'),
   magical_backpack:    ZAINO('backpack_large'),
+  
+  // ─── SPECIAL ITEMS ───────────────────────────────────
+  key:                 SPECIALE('key'),
 };
 
 // Default image for items without specific images
