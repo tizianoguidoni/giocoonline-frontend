@@ -249,20 +249,52 @@ export class SpellSystem {
 // Mana potion pickup
 export function spawnPotion(scene, pos, amount = 40) {
   const group = new THREE.Group();
-  const bottleMat = new THREE.MeshStandardMaterial({
-    color: 0x2040ff, roughness: 0.1, metalness: 0.1,
-    emissive: 0x2040ff, emissiveIntensity: 0.7,
-    transparent: true, opacity: 0.8,
+
+  // Improved potion graphics
+  const glassMat = new THREE.MeshPhysicalMaterial({
+    color: 0xaaeeff, transmission: 0.9, opacity: 1, transparent: true,
+    roughness: 0.1, ior: 1.5, thickness: 0.1
   });
-  const corkMat = new THREE.MeshStandardMaterial({ color: 0x6a4020, roughness: 0.8 });
-  const bottle = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.28, 10), bottleMat);
-  const cork = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.08, 8), corkMat);
-  cork.position.y = 0.18;
-  const glow = new THREE.PointLight(0x4060ff, 0.7, 2.5);
-  group.add(bottle, cork, glow);
+  const liquidMat = new THREE.MeshStandardMaterial({
+    color: 0x2040ff, roughness: 0.2, metalness: 0.1,
+    emissive: 0x1030ff, emissiveIntensity: 1.5,
+    transparent: true, opacity: 0.9
+  });
+  const corkMat = new THREE.MeshStandardMaterial({ color: 0x8a5a30, roughness: 0.9 });
+  const detailMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.3, metalness: 1.0 });
+
+  // Flask body
+  const bodyGeo = new THREE.SphereGeometry(0.16, 16, 12);
+  const liquid = new THREE.Mesh(bodyGeo, liquidMat);
+  liquid.scale.setScalar(0.9); // slightly smaller than glass
+  const glassBody = new THREE.Mesh(bodyGeo, glassMat);
+
+  // Flask neck
+  const neckGeo = new THREE.CylinderGeometry(0.06, 0.08, 0.18, 12);
+  const neck = new THREE.Mesh(neckGeo, glassMat);
+  neck.position.y = 0.18;
+
+  // Cork
+  const cork = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.08, 8), corkMat);
+  cork.position.y = 0.28;
+
+  // Decorative Ring
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.07, 0.015, 8, 16), detailMat);
+  ring.position.y = 0.18;
+  ring.rotation.x = Math.PI / 2;
+
+  const glow = new THREE.PointLight(0x4060ff, 1.2, 3.5);
+  glow.position.y = 0.1;
+
+  group.add(liquid, glassBody, neck, cork, ring, glow);
   group.position.copy(pos); group.position.y = 1;
   group.userData.isPotion = true;
   group.userData.amount = amount;
+
+  // Floating animation setup
+  group.userData.floatTime = Math.random() * 10;
+  group.userData.baseY = 1.0;
+
   scene.add(group);
   return group;
 }

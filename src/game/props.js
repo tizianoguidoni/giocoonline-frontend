@@ -9,24 +9,40 @@ export function resetTorchLightBudget(n = 6) { _torchLightBudget = n; }
 
 export function spawnTorch(scene, pos, rot = 0) {
   const group = new THREE.Group();
-  const woodMat = new THREE.MeshStandardMaterial({ color: 0x3a1a10, roughness: 0.9 });
-  const base = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.4, 0.1), woodMat);
-  base.position.y = 0.2;
-  const holder = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.03, 6, 10, Math.PI), new THREE.MeshStandardMaterial({ color: 0x707070, roughness: 0.4, metalness: 0.8 }));
-  holder.position.y = 0.42; holder.rotation.x = Math.PI / 2;
 
-  const flameMat = new THREE.MeshBasicMaterial({
-    color: 0xff9040, transparent: true, opacity: 0.9,
-    blending: THREE.AdditiveBlending, depthWrite: false,
-  });
-  const flame = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.28, 6), flameMat);
-  flame.position.y = 0.58;
-  group.add(base, holder, flame);
+  // Improved torch handle
+  const woodMat = new THREE.MeshStandardMaterial({ color: 0x4a2a18, roughness: 0.95 });
+  const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.03, 0.5, 8), woodMat);
+  handle.position.y = 0.25;
+
+  // Metal brackets and cage
+  const metalMat = new THREE.MeshStandardMaterial({ color: 0x404040, roughness: 0.7, metalness: 0.8 });
+  const ring1 = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.015, 8, 12), metalMat);
+  ring1.position.y = 0.45;
+  ring1.rotation.x = Math.PI / 2;
+  const ring2 = new THREE.Mesh(new THREE.TorusGeometry(0.07, 0.015, 8, 12), metalMat);
+  ring2.position.y = 0.55;
+  ring2.rotation.x = Math.PI / 2;
+
+  // Better layered flame
+  const flameCoreMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
+  const flameOuterMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false });
+  const flameGlowMat = new THREE.MeshBasicMaterial({ color: 0xff3300, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false });
+
+  const flameCore = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.15, 8), flameCoreMat);
+  const flameOuter = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.25, 8), flameOuterMat);
+  const flameGlow = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), flameGlowMat);
+
+  const flameGroup = new THREE.Group();
+  flameGroup.add(flameCore, flameOuter, flameGlow);
+  flameGroup.position.y = 0.6;
+
+  group.add(handle, ring1, ring2, flameGroup);
 
   // Only budget-limited torches get a dynamic light
   if (_torchLightBudget > 0) {
-    const light = new THREE.PointLight(0xff9040, 1.8, 5);
-    light.position.y = 0.6;
+    const light = new THREE.PointLight(0xffaa40, 2.0, 7);
+    light.position.y = 0.7;
     group.add(light);
     group.userData.light = light;
     _torchLightBudget--;
@@ -34,7 +50,7 @@ export function spawnTorch(scene, pos, rot = 0) {
 
   group.position.copy(pos);
   group.rotation.y = rot;
-  group.userData.flame = flame;
+  group.userData.flame = flameGroup;
   group.userData.flickerTime = Math.random() * 10;
   scene.add(group);
   return group;

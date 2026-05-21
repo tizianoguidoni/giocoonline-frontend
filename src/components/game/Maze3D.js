@@ -122,7 +122,7 @@ export default function Maze3D({ onExit }) {
           if (!document.pointerLockElement && gameRef.current) {
             gameRef.current.requestPointerLock();
           }
-        }, 300);
+        }, 100); // Shorter timeout might be better
       }
     }
   }, [showExitConfirm, adminOpen]);

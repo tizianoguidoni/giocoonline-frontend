@@ -89,25 +89,56 @@ export const HouseScene: React.FC = () => {
     chestGroup.position.set(0, 0, 0);
     scene.add(chestGroup);
 
+    const woodMat = new THREE.MeshStandardMaterial({ color: "#5a3a18", roughness: 0.8 });
+    const metalMat = new THREE.MeshStandardMaterial({ color: "#c0c0c0", metalness: 0.8, roughness: 0.3 });
+    const goldMat = new THREE.MeshStandardMaterial({ color: "#ffd700", metalness: 0.9, roughness: 0.2 });
+
     const chestBase = new THREE.Mesh(
-      new THREE.BoxGeometry(1, 0.5, 0.6),
-      new THREE.MeshStandardMaterial({ color: "#5d4037", flatShading: true })
+      new THREE.BoxGeometry(1.2, 0.7, 0.8),
+      woodMat
     );
-    chestBase.position.y = 0.25;
+    chestBase.position.y = 0.35;
     chestBase.castShadow = true;
     chestGroup.add(chestBase);
 
+    // Bands for base
+    [-0.5, 0, 0.5].forEach((x) => {
+      const band = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.72, 0.82), metalMat);
+      band.position.set(x, 0.35, 0);
+      chestGroup.add(band);
+    });
+    const hBand = new THREE.Mesh(new THREE.BoxGeometry(1.22, 0.08, 0.82), metalMat);
+    hBand.position.set(0, 0.35, 0);
+    chestGroup.add(hBand);
+
     const lidPivot = new THREE.Group();
-    lidPivot.position.set(0, 0.5, -0.3);
+    lidPivot.position.set(0, 0.7, -0.4);
     chestGroup.add(lidPivot);
 
     const chestLid = new THREE.Mesh(
-      new THREE.BoxGeometry(1, 0.2, 0.6),
-      new THREE.MeshStandardMaterial({ color: "#795548", flatShading: true })
+      new THREE.CylinderGeometry(0.4, 0.4, 1.2, 16, 1, false, 0, Math.PI),
+      woodMat
     );
-    chestLid.position.set(0, 0.1, 0.3);
+    chestLid.rotation.set(0, 0, Math.PI / 2);
+    chestLid.position.set(0, 0, 0.4);
     chestLid.castShadow = true;
     lidPivot.add(chestLid);
+
+    // Bands for lid
+    [-0.5, 0, 0.5].forEach((x) => {
+      const lidBand = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.41, 0.41, 0.1, 16, 1, false, 0, Math.PI),
+        metalMat
+      );
+      lidBand.rotation.set(0, 0, Math.PI / 2);
+      lidBand.position.set(x, 0, 0.4);
+      lidPivot.add(lidBand);
+    });
+
+    // Lock
+    const lock = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.04), goldMat);
+    lock.position.set(0, 0.5, 0.42);
+    chestGroup.add(lock);
 
     // --- Monsters ---
     const monsters: THREE.Group[] = [];
