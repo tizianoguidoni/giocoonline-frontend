@@ -195,6 +195,7 @@ export function AdminPanelUI({ role, game, onClose }) {
                               onClick={() => {
                                 game?.teleportToCell(x, y);
                                 setMinimapData(game.getMinimapData());
+                                if (onClose) onClose();
                               }}
                               className={`cursor-pointer hover:opacity-80 transition-all ${
                                 isPlayer ? 'bg-[#ff3c00] scale-125 z-10' : 
