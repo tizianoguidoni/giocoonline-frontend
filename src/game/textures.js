@@ -16,6 +16,8 @@ function finalize(c, opts = {}) {
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
   tex.repeat.set(opts.repeat || 1, opts.repeat || 1);
   tex.anisotropy = 4;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.needsUpdate = true;
   return tex;
 }
 

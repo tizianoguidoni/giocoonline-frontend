@@ -477,16 +477,47 @@ export function spawnGem(scene, pos) {
 
 export function spawnMoney(scene, pos, amount = 10) {
   const group = new THREE.Group();
+
+  // Improved gold coin graphics (pile of coins)
   const mat = new THREE.MeshStandardMaterial({
-    color: 0xffd860, roughness: 0.2, metalness: 0.9,
-    emissive: 0xffae10, emissiveIntensity: 0.9,
+    color: 0xffd700, roughness: 0.2, metalness: 0.9,
+    emissive: 0xffaa00, emissiveIntensity: 0.6,
   });
-  for (let i = 0; i < 3; i++) {
-    const c = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.03, 14), mat);
-    c.position.y = 0.1 + i * 0.04;
-    group.add(c);
+  const detailMat = new THREE.MeshStandardMaterial({
+    color: 0xffe066, roughness: 0.4, metalness: 0.7,
+  });
+
+  // Create a randomized pile of 6-10 coins
+  const numCoins = 6 + Math.floor(Math.random() * 5);
+  for (let i = 0; i < numCoins; i++) {
+    const coin = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.02, 16), mat);
+    // Stack coins somewhat randomly but clustered
+    coin.position.set(
+      (Math.random() - 0.5) * 0.15,
+      0.05 + i * 0.02 + Math.random() * 0.02,
+      (Math.random() - 0.5) * 0.15
+    );
+    coin.rotation.set(
+      (Math.random() - 0.5) * 0.3,
+      Math.random() * Math.PI,
+      (Math.random() - 0.5) * 0.3
+    );
+    group.add(coin);
   }
-  group.position.copy(pos); group.position.y = 0.9;
+
+  // Add a subtle glow
+  const glow = new THREE.PointLight(0xffcc00, 0.8, 2.0);
+  glow.position.y = 0.2;
+  group.add(glow);
+
+  group.position.copy(pos);
+  group.position.y = 0.1; // Place closer to ground
+
+  // Floating animation setup
+  group.userData.floatTime = Math.random() * 10;
+  group.userData.baseY = 0.8;
+  group.position.y = group.userData.baseY;
+
   group.userData.isMoney = true;
   group.userData.amount = amount;
   scene.add(group);

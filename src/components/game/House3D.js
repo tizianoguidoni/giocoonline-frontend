@@ -166,42 +166,70 @@ function Chest({ onOpen, isOpen }) {
     }
   });
 
+  // Improved materials
+  const woodColor = hovered ? '#8a5a2a' : '#5a3a18';
+  const metalColor = '#c0c0c0';
+  const goldColor = '#ffd700';
+
   return (
     <group position={[3.5, 0, -2.5]}
       onPointerOver={() => setHovered(true)}
       onPointerOut={() => setHovered(false)}
       onClick={onOpen}>
       {/* Base */}
-      <mesh position={[0, 0.3, 0]} castShadow>
-        <boxGeometry args={[1.2, 0.6, 0.8]} />
-        <meshStandardMaterial color={hovered ? '#6a4a2a' : '#4a3218'} roughness={0.7} metalness={0.1} />
+      <mesh position={[0, 0.35, 0]} castShadow>
+        <boxGeometry args={[1.2, 0.7, 0.8]} />
+        <meshStandardMaterial color={woodColor} roughness={0.8} metalness={0.05} />
       </mesh>
-      {/* Metal bands */}
-      {[-0.25, 0, 0.25].map((z, i) => (
-        <mesh key={i} position={[0, 0.3, z]}>
-          <boxGeometry args={[1.22, 0.62, 0.04]} />
-          <meshStandardMaterial color="#888" metalness={0.8} roughness={0.3} />
+
+      {/* Horizontal & Vertical Metal Bands (More detailed) */}
+      {[-0.5, 0, 0.5].map((x, i) => (
+        <mesh key={`vband-${i}`} position={[x, 0.35, 0]}>
+          <boxGeometry args={[0.08, 0.72, 0.82]} />
+          <meshStandardMaterial color={metalColor} metalness={0.8} roughness={0.3} />
         </mesh>
       ))}
+      <mesh position={[0, 0.35, 0]}>
+        <boxGeometry args={[1.22, 0.08, 0.82]} />
+        <meshStandardMaterial color={metalColor} metalness={0.8} roughness={0.3} />
+      </mesh>
+
       {/* Lid pivot */}
-      <group position={[0, 0.6, -0.4]} ref={lidRef}>
-        <mesh position={[0, 0.05, 0.4]} castShadow>
-          <boxGeometry args={[1.2, 0.1, 0.8]} />
-          <meshStandardMaterial color={hovered ? '#6a4a2a' : '#4a3218'} roughness={0.7} metalness={0.1} />
+      <group position={[0, 0.7, -0.4]} ref={lidRef}>
+        {/* Rounded lid using cylinder segment */}
+        <mesh position={[0, 0, 0.4]} rotation={[0, 0, Math.PI / 2]} castShadow>
+          <cylinderGeometry args={[0.4, 0.4, 1.2, 16, 1, false, 0, Math.PI]} />
+          <meshStandardMaterial color={woodColor} roughness={0.8} metalness={0.05} />
         </mesh>
-        <mesh position={[0, 0.12, 0.4]}>
-          <boxGeometry args={[1.22, 0.04, 0.82]} />
-          <meshStandardMaterial color="#888" metalness={0.8} roughness={0.3} />
+        {/* Lid Metal Bands */}
+        {[-0.5, 0, 0.5].map((x, i) => (
+          <mesh key={`lidband-${i}`} position={[x, 0, 0.4]} rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.41, 0.41, 0.1, 16, 1, false, 0, Math.PI]} />
+            <meshStandardMaterial color={metalColor} metalness={0.8} roughness={0.3} />
+          </mesh>
+        ))}
+      </group>
+
+      {/* Ornate Lock */}
+      <group position={[0, 0.5, 0.42]}>
+        <mesh>
+          <boxGeometry args={[0.2, 0.2, 0.04]} />
+          <meshStandardMaterial color={goldColor} metalness={0.9} roughness={0.2} />
+        </mesh>
+        <mesh position={[0, 0, 0.02]}>
+          <circleGeometry args={[0.06, 16]} />
+          <meshStandardMaterial color="#222" roughness={0.8} />
         </mesh>
       </group>
-      {/* Lock */}
-      <mesh position={[0, 0.45, 0.41]}>
-        <boxGeometry args={[0.15, 0.15, 0.02]} />
-        <meshStandardMaterial color="#D4AF37" metalness={0.9} roughness={0.2} />
-      </mesh>
-      {/* Glow hint when hovered */}
-      {hovered && (
-        <pointLight position={[0, 0.8, 0]} color="#D4AF37" intensity={1} distance={3} />
+
+      {/* Magic Glow Inside */}
+      {isOpen && (
+        <pointLight position={[0, 0.8, 0]} color="#40a0ff" intensity={1.5} distance={4} />
+      )}
+
+      {/* Hover hint */}
+      {hovered && !isOpen && (
+        <pointLight position={[0, 0.8, 0]} color="#D4AF37" intensity={1.2} distance={3} />
       )}
     </group>
   );
