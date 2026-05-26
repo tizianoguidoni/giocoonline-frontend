@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Sky, PointerLockControls, Html, Stars } from '@react-three/drei';
 import * as THREE from 'three';
+import ShopPanel from './ShopPanel';
 
 /* ══════════════════════════════════════════════
    CONSTANTS
@@ -10,6 +11,14 @@ const VILLAGE_SIZE = 60;          // half-extent of ground
 const MOVE_SPEED   = 5.5;
 const PLAYER_HEIGHT = 1.7;
 const INTERACT_DIST = 3.5;
+
+const INTERACTABLES = [
+  { id: 'gate', type: 'gate', name: '← Torna alla Casa', pos: [0, 0, 27], dist: 4.5 },
+  { id: 'guard', type: 'npc', name: '🛡 Guardia', pos: [2.5, 0, 24], dist: 3.5 },
+  { id: 'herb', type: 'shop_herb', name: '🌿 Erborista', pos: [0, 0, 6.5], dist: 3.5 },
+  { id: 'smith', type: 'shop_smith', name: '🔨 Fabbro', pos: [5, 0, 4.5], dist: 3.5 },
+  { id: 'merc', type: 'shop_merc', name: '📜 Mercante', pos: [-5, 0, 4.5], dist: 3.5 },
+];
 
 /* ══════════════════════════════════════════════
    COBBLESTONE GROUND — procedural instanced mesh
@@ -234,87 +243,53 @@ function Building({ position, size = [6, 5, 5], color = '#7a6a54', roofColor = '
       <mesh position={[1.5, h * 0.6, d / 2 + 0.01]}>
         <planeGeometry args={[0.9, 0.9]} />
         <meshStandardMaterial color="#4a7a9b" transparent opacity={0.6} side={THREE.DoubleSide} />
-      </mesh>
-
-      {/* Sign / Label */}
-      {label && nearEnough && (
-        <Html position={[0, h + 3, 0]} center style={{ pointerEvents: 'none' }}>
-          <div style={{
-            background: 'rgba(0,0,0,0.75)',
-            border: '1px solid #D4AF37',
-            borderRadius: 8,
-            padding: '6px 14px',
-            color: '#D4AF37',
-            fontFamily: 'Inter, sans-serif',
-            fontSize: 13,
-            fontWeight: 700,
-            whiteSpace: 'nowrap',
-            boxShadow: '0 0 12px rgba(212,175,55,0.3)',
-          }}>
-            {label}
-          </div>
-        </Html>
-      )}
-      {nearEnough && onInteract && (
-        <Html position={[0, h + 1.8, 0]} center style={{ pointerEvents: 'none' }}>
-          <div style={{
-            background: 'rgba(0,0,0,0.6)',
-            border: '1px solid #ffffff44',
-            borderRadius: 6,
-            padding: '3px 10px',
-            color: '#fff',
-            fontSize: 11,
-            fontFamily: 'Inter, sans-serif',
-          }}>
-            [E] Interagisci
-          </div>
-        </Html>
-      )}
-    </group>
-  );
-}
-
-/* ══════════════════════════════════════════════
-   NPC — wandering ambient villager
-══════════════════════════════════════════════ */
-function NPC({ startPos, color = '#e8c88a', name, onTalk, playerPos }) {
+     /* ══════════════════════════════════════════════
+   NPC — static premium ambient villager / shopkeeper
+   ══════════════════════════════════════════════ */
+function NPC({ startPos, color = '#e8c88a', name, playerPos }) {
   const groupRef = useRef();
-  const targetRef = useRef(new THREE.Vector3(startPos[0], 0, startPos[2]));
   const posRef = useRef(new THREE.Vector3(startPos[0], 0, startPos[2]));
 
   const near = playerPos
     ? Math.hypot(playerPos.x - posRef.current.x, playerPos.z - posRef.current.z) < INTERACT_DIST
     : false;
 
-  useFrame(({ clock }, delta) => {
+  useFrame(({ clock }) => {
     if (!groupRef.current) return;
     const t = clock.elapsedTime;
+    
+    // Idle breathing bobbing animation
+    groupRef.current.position.y = Math.sin(t * 2.0) * 0.02;
 
-    // New random target every few seconds
-    if (posRef.current.distanceTo(targetRef.current) < 0.5) {
-      const angle = Math.random() * Math.PI * 2;
-      const dist  = 3 + Math.random() * 4;
-      targetRef.current.set(
-        startPos[0] + Math.cos(angle) * dist,
-        0,
-        startPos[2] + Math.sin(angle) * dist,
-      );
-    }
-
-    const dir = targetRef.current.clone().sub(posRef.current).normalize();
-    posRef.current.addScaledVector(dir, delta * 1.0);
-    groupRef.current.position.copy(posRef.current);
-    groupRef.current.position.y = Math.sin(t * 3) * 0.04; // bobbing
-
-    // Face movement direction
-    if (dir.length() > 0.01) {
-      const angle = Math.atan2(dir.x, dir.z);
-      groupRef.current.rotation.y = angle;
+    // Face the approaching player or default to facing the center of the village
+    if (playerPos && near) {
+      const dx = playerPos.x - posRef.current.x;
+      const dz = playerPos.z - posRef.current.z;
+      const targetAngle = Math.atan2(dx, dz);
+      const currentAngle = groupRef.current.rotation.y;
+      let diff = targetAngle - currentAngle;
+      diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+      groupRef.current.rotation.y += diff * 0.1;
+    } else {
+      const dx = -posRef.current.x;
+      const dz = -posRef.current.z;
+      const defaultAngle = Math.atan2(dx, dz);
+      const currentAngle = groupRef.current.rotation.y;
+      let diff = defaultAngle - currentAngle;
+      diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+      groupRef.current.rotation.y += diff * 0.03;
     }
   });
 
+  const getPrompt = () => {
+    if (name.includes('Mercante')) return '[E] Negozio Generale';
+    if (name.includes('Fabbro')) return '[E] Forgia & Armi';
+    if (name.includes('Erborista')) return '[E] Acquista Pozioni';
+    return '[E] Parla';
+  };
+
   return (
-    <group ref={groupRef}>
+    <group ref={groupRef} position={startPos}>
       {/* Body */}
       <mesh castShadow position={[0, 0.9, 0]}>
         <capsuleGeometry args={[0.25, 0.8, 8, 8]} />
@@ -343,31 +318,36 @@ function NPC({ startPos, color = '#e8c88a', name, onTalk, playerPos }) {
       {name && near && (
         <Html position={[0, 2.6, 0]} center style={{ pointerEvents: 'none' }}>
           <div style={{
-            background: 'rgba(0,0,0,0.75)',
-            border: '1px solid #2A9D8F',
-            borderRadius: 8,
-            padding: '4px 10px',
+            background: 'rgba(10, 5, 20, 0.92)',
+            border: '1.5px solid #2A9D8F',
+            borderRadius: 10,
+            padding: '6px 14px',
             color: '#2A9D8F',
-            fontSize: 12,
+            fontSize: 13,
             fontFamily: 'Inter, sans-serif',
             fontWeight: 700,
             whiteSpace: 'nowrap',
+            boxShadow: '0 0 15px rgba(42, 157, 143, 0.45)',
           }}>
             {name}
           </div>
         </Html>
       )}
-      {near && onTalk && (
+      {near && (
         <Html position={[0, 2.0, 0]} center style={{ pointerEvents: 'none' }}>
           <div style={{
-            background: 'rgba(0,0,0,0.6)',
-            borderRadius: 6,
-            padding: '2px 8px',
+            background: 'rgba(0,0,0,0.85)',
+            border: '1px solid rgba(255,255,255,0.25)',
+            borderRadius: 8,
+            padding: '5px 12px',
             color: '#fff',
-            fontSize: 10,
+            fontSize: 11,
+            fontWeight: 600,
             fontFamily: 'Inter, sans-serif',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+            whiteSpace: 'nowrap',
           }}>
-            [E] Parla
+            {getPrompt()}
           </div>
         </Html>
       )}
@@ -675,10 +655,10 @@ function VillageScene({ dialogOpen, onNearGate, onInteractPress }) {
   const pp = playerPosState.current;
 
   const npcList = useMemo(() => [
-    { id: 1, pos: [-8, 0, 5],  color: '#c4955a', name: '🛡 Guardia' },
-    { id: 2, pos: [8, 0, -5],  color: '#a0c4a0', name: '🌿 Erborista' },
-    { id: 3, pos: [-5, 0, -8], color: '#c4a870', name: '🔨 Fabbro' },
-    { id: 4, pos: [10, 0, 8],  color: '#c07a9a', name: '📜 Mercante' },
+    { id: 1, pos: [2.5, 0, 24], color: '#c4955a', name: '🛡 Guardia' },
+    { id: 2, pos: [0, 0, 6.5],  color: '#a0c4a0', name: '🌿 Erborista' },
+    { id: 3, pos: [5, 0, 4.5],  color: '#c4a870', name: '🔨 Fabbro' },
+    { id: 4, pos: [-5, 0, 4.5], color: '#c07a9a', name: '📜 Mercante' },
   ], []);
 
   return (
@@ -880,7 +860,9 @@ export default function Village3D({ onExit }) {
   const [dialog, setDialog] = useState(null);
   const [time, setTime] = useState(0.3);
   const timeRef = useRef(0.3);
-  const nearGateRef = useRef(false);
+  
+  const [nearestInteractable, setNearestInteractable] = useState(null);
+  const [shopConfig, setShopConfig] = useState({ open: false, category: 'all' });
 
   // Update displayed time every second
   useEffect(() => {
@@ -888,26 +870,51 @@ export default function Village3D({ onExit }) {
     return () => clearInterval(id);
   }, []);
 
-  // ESC closes dialog or exits
+  // ESC closes dialog, shop or exits
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === 'Escape') {
-        if (dialog) setDialog(null);
+        if (shopConfig.open) setShopConfig({ open: false, category: 'all' });
+        else if (dialog) setDialog(null);
         else onExit?.();
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [dialog, onExit]);
+  }, [dialog, shopConfig.open, onExit]);
 
   const handleInteractPress = useCallback(() => {
-    if (nearGateRef.current) {
+    if (!nearestInteractable) return;
+    
+    if (nearestInteractable.type === 'gate') {
       onExit?.();
+    } else if (nearestInteractable.type === 'npc') {
+      setDialog(nearestInteractable);
+    } else if (nearestInteractable.type === 'shop_merc') {
+      setShopConfig({ open: true, category: 'all' });
+    } else if (nearestInteractable.type === 'shop_smith') {
+      setShopConfig({ open: true, category: 'equipment' });
+    } else if (nearestInteractable.type === 'shop_herb') {
+      setShopConfig({ open: true, category: 'consumable' });
     }
-  }, [onExit]);
+  }, [nearestInteractable, onExit]);
 
-  const handleNearGate = useCallback((pos) => {
-    nearGateRef.current = Math.hypot(pos.x, pos.z - 27) < INTERACT_DIST + 1;
+  const handlePlayerMove = useCallback((pos) => {
+    let nearest = null;
+    let minDist = Infinity;
+    
+    INTERACTABLES.forEach(ent => {
+      const d = Math.hypot(pos.x - ent.pos[0], pos.z - ent.pos[2]);
+      if (d < ent.dist && d < minDist) {
+        minDist = d;
+        nearest = ent;
+      }
+    });
+
+    setNearestInteractable(prev => {
+      if (prev?.id === nearest?.id) return prev;
+      return nearest;
+    });
   }, []);
 
   return (
@@ -947,16 +954,34 @@ export default function Village3D({ onExit }) {
       <Crosshair />
       <NPCDialog npc={dialog} onClose={() => setDialog(null)} />
 
+      {/* Specialty Premium Shop Overlay */}
+      {shopConfig.open && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(11, 9, 20, 0.85)',
+          backdropFilter: 'blur(20px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 24, zIndex: 300
+        }}>
+          <div className="w-full max-w-5xl h-[85vh] animate-fade-in">
+            <ShopPanel 
+              initialCategory={shopConfig.category} 
+              onClose={() => setShopConfig({ open: false, category: 'all' })} 
+            />
+          </div>
+        </div>
+      )}
+
       <Canvas
         shadows
         camera={{ fov: 70, near: 0.1, far: 200, position: [0, PLAYER_HEIGHT, 10] }}
         style={{ width: '100%', height: '100%' }}
-        onPointerDown={e => !dialog && e.target.requestPointerLock?.()}
+        onPointerDown={e => !dialog && !shopConfig.open && e.target.requestPointerLock?.()}
         gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.1 }}
       >
         <VillageScene
-          dialogOpen={!!dialog}
-          onNearGate={handleNearGate}
+          dialogOpen={!!dialog || shopConfig.open}
+          onNearGate={handlePlayerMove}
           onInteractPress={handleInteractPress}
         />
       </Canvas>

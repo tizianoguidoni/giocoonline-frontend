@@ -40,7 +40,7 @@ const SLOT_NAMES = {
   backpack: 'Zaino'
 };
 
-export default function ShopPanel() {
+export default function ShopPanel({ initialCategory = 'all', onClose }) {
   const { t } = useTranslation();
   const { character, refreshCharacter } = useAuth();
   const [shopItems, setShopItems] = useState([]);
@@ -49,7 +49,7 @@ export default function ShopPanel() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeCategory, setActiveCategory] = useState('all');
+  const [activeCategory, setActiveCategory] = useState(initialCategory || 'all');
 
   useEffect(() => {
     fetchShopItems();
@@ -127,11 +127,21 @@ export default function ShopPanel() {
             </div>
           </div>
           
-          {/* Gold Display */}
-          <div className="flex items-center gap-2 bg-[#D4AF37]/20 px-4 py-2 rounded-xl border border-[#D4AF37]/30">
-            <Coins className="w-5 h-5 text-[#D4AF37]" />
-            <span className="text-[#D4AF37] font-bold font-mono text-lg">{character?.gold || 0}</span>
-            <span className="text-[#A19BAD] text-sm">Oro</span>
+          <div className="flex items-center gap-4">
+            {/* Gold Display */}
+            <div className="flex items-center gap-2 bg-[#D4AF37]/20 px-4 py-2 rounded-xl border border-[#D4AF37]/30">
+              <Coins className="w-5 h-5 text-[#D4AF37]" />
+              <span className="text-[#D4AF37] font-bold font-mono text-lg">{character?.gold || 0}</span>
+              <span className="text-[#A19BAD] text-sm">Oro</span>
+            </div>
+            {onClose && (
+              <button 
+                onClick={onClose} 
+                className="text-white hover:bg-white/10 w-9 h-9 flex items-center justify-center rounded-xl transition-all border border-white/10"
+              >
+                ✕
+              </button>
+            )}
           </div>
         </div>
 
