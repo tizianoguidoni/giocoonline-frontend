@@ -270,9 +270,11 @@ export default function CharacterCreatePage() {
                       <Label className="text-[#A19BAD]">Select Avatar</Label>
                       <div className="flex gap-3 justify-center">
                         {[1, 2, 3].map((avatarId) => (
-                          <button
+                          <motion.button
                             key={avatarId}
                             onClick={() => setSelectedAvatar(avatarId)}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                             className={`w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${
                               selectedAvatar === avatarId 
                                 ? 'border-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.4)]' 
@@ -280,12 +282,14 @@ export default function CharacterCreatePage() {
                             }`}
                             data-testid={`avatar-${avatarId}`}
                           >
-                            <img
+                            <motion.img
                               src={selectedClass ? AVATARS[selectedClass][avatarId - 1] : AVATARS.warrior[avatarId - 1]}
                               alt={`Avatar ${avatarId}`}
                               className="w-full h-full object-cover"
+                              animate={selectedAvatar === avatarId ? { scale: [1, 1.05, 1] } : {}}
+                              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                             />
-                          </button>
+                          </motion.button>
                         ))}
                       </div>
                     </div>
@@ -301,13 +305,24 @@ export default function CharacterCreatePage() {
                     {stats && (
                       <div className="space-y-4">
                         <div className="flex items-center gap-4 mb-6">
-                          <div className="w-16 h-16 rounded-xl overflow-hidden avatar-ring">
-                            <img
+                          <motion.div 
+                            whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(212,175,55,0.5)" }}
+                            className="w-16 h-16 rounded-xl overflow-hidden avatar-ring cursor-pointer"
+                          >
+                            <motion.img
                               src={selectedClass ? AVATARS[selectedClass][selectedAvatar - 1] : AVATARS.warrior[0]}
                               alt="Preview"
                               className="w-full h-full object-cover"
+                              animate={{
+                                scale: [1, 1.05, 1],
+                              }}
+                              transition={{
+                                duration: 4,
+                                repeat: Infinity,
+                                ease: "easeInOut"
+                              }}
                             />
-                          </div>
+                          </motion.div>
                           <div>
                             <p className="text-white font-semibold text-lg">{name || 'Your Hero'}</p>
                             <p className="text-[#A19BAD] text-sm">

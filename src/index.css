@@ -190,6 +190,11 @@ code, .mono {
   75% { transform: translateX(-5px); }
 }
 
+@keyframes shimmer {
+  0% { background-position: 0% 0; }
+  100% { background-position: 200% 0; }
+}
+
 @keyframes heal-pulse {
   0% { box-shadow: 0 0 0 0 rgba(42, 157, 143, 0.4); }
   100% { box-shadow: 0 0 0 20px rgba(42, 157, 143, 0); }

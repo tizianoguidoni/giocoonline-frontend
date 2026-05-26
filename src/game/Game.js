@@ -31,7 +31,10 @@ export class Game {
       canvas, antialias: false, powerPreference: 'high-performance'
     });
     this.renderer.setPixelRatio(1);   // force 1 for perf on high-DPI screens
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    // Use the actual canvas element dimensions, not the full window
+    const cw = canvas.clientWidth || canvas.offsetWidth || window.innerWidth;
+    const ch = canvas.clientHeight || canvas.offsetHeight || window.innerHeight;
+    this.renderer.setSize(cw, ch, false); // false = don't override CSS size
     this.renderer.setClearColor(0x000000);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -41,7 +44,7 @@ export class Game {
     this.scene = new THREE.Scene();
     this.scene.fog = new THREE.Fog(0x0a0608, 3, 18);
 
-    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.05, 200);
+    this.camera = new THREE.PerspectiveCamera(75, cw / ch, 0.05, 200);
     this.camera.position.set(0, PLAYER_HEIGHT, 0);
     this.scene.add(this.camera);
 
@@ -319,10 +322,16 @@ export class Game {
       if (e.button === 0) this.mouseDown = false;
     };
     this._onResize = () => {
-      this.camera.aspect = window.innerWidth / window.innerHeight;
+      const w = this.canvas.clientWidth || this.canvas.offsetWidth || window.innerWidth;
+      const h = this.canvas.clientHeight || this.canvas.offsetHeight || window.innerHeight;
+      this.camera.aspect = w / h;
       this.camera.updateProjectionMatrix();
-      this.renderer.setSize(window.innerWidth, window.innerHeight);
+      this.renderer.setSize(w, h, false);
     };
+
+    // ResizeObserver keeps renderer in sync when the canvas container changes size
+    this._resizeObserver = new ResizeObserver(() => this._onResize());
+    this._resizeObserver.observe(this.canvas);
 
     window.addEventListener('keydown', this._onKeyDown);
     window.addEventListener('keyup', this._onKeyUp);
@@ -333,6 +342,10 @@ export class Game {
   }
 
   _unbindEvents() {
+    if (this._resizeObserver) {
+      this._resizeObserver.disconnect();
+      this._resizeObserver = null;
+    }
     window.removeEventListener('keydown', this._onKeyDown);
     window.removeEventListener('keyup', this._onKeyUp);
     window.removeEventListener('mousemove', this._onMouseMove);

@@ -28,6 +28,8 @@ export default function Maze3D({ onExit }) {
   const [toasts, setToasts] = useState([]);
   const [hitMarker, setHitMarker] = useState(false);
   const [damageFlash, setDamageFlash] = useState(false);
+  const [showBossPopup, setShowBossPopup] = useState(false);
+  const bossPopupCooldownRef = useRef(false);
 
   // Load assets
   useEffect(() => {
@@ -42,6 +44,19 @@ export default function Maze3D({ onExit }) {
       });
     }
   }, [isAssetsLoaded]);
+
+  // Detect boss proximity and show popup
+  useEffect(() => {
+    if (!gameState) return;
+    const nearBoss = gameState.bossVisible && gameState.bossAlive;
+    if (nearBoss && !bossPopupCooldownRef.current) {
+      bossPopupCooldownRef.current = true;
+      setShowBossPopup(true);
+      // Pause game while popup is visible
+      if (gameRef.current) gameRef.current.setPaused(true);
+      if (document.pointerLockElement) document.exitPointerLock();
+    }
+  }, [gameState]);
 
   // Handle Game Events
   const handleEvent = (event) => {
@@ -134,6 +149,11 @@ export default function Maze3D({ onExit }) {
       const g = new Game(canvasRef.current, handleEvent, character);
       gameRef.current = g;
       g.start();
+      
+      // Force a resize immediately so the renderer matches the actual canvas size
+      requestAnimationFrame(() => {
+        if (g && g._onResize) g._onResize();
+      });
       
       // Request pointer lock on click
       const lock = () => g.requestPointerLock();
@@ -310,6 +330,79 @@ export default function Maze3D({ onExit }) {
           <div className="absolute top-1/2 left-1/2 w-1 h-1 bg-white rounded-full -translate-x-1/2 -translate-y-1/2" />
         </div>
       </div>
+
+      {/* Boss Area Blocked Overlay */}
+      <AnimatePresence>
+        {showBossPopup && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[300] flex items-center justify-center"
+            style={{ background: 'rgba(10,0,20,0.88)', backdropFilter: 'blur(12px)' }}
+            onClick={() => {
+              setShowBossPopup(false);
+              bossPopupCooldownRef.current = false;
+              if (gameRef.current) gameRef.current.setPaused(false);
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.8, y: 30, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              transition={{ type: 'spring', damping: 18 }}
+              onClick={e => e.stopPropagation()}
+              className="relative max-w-md w-full mx-6 rounded-3xl overflow-hidden shadow-[0_0_80px_rgba(200,40,40,0.4)]"
+              style={{ background: 'linear-gradient(135deg,#1a0010 0%,#0d0020 60%,#1a0510 100%)', border: '1px solid rgba(200,40,40,0.35)' }}
+            >
+              {/* Animated top glow bar */}
+              <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg,#e63946,#ff8c00,#e63946)', backgroundSize: '200% 100%', animation: 'shimmer 2s linear infinite' }} />
+
+              <div className="p-8 text-center">
+                {/* Boss skull icon */}
+                <div className="relative inline-block mb-4">
+                  <div className="absolute inset-0 rounded-full animate-ping" style={{ background: 'rgba(230,57,70,0.3)' }} />
+                  <div className="relative w-20 h-20 rounded-full flex items-center justify-center mx-auto" style={{ background: 'rgba(230,57,70,0.15)', border: '2px solid rgba(230,57,70,0.5)' }}>
+                    <Skull className="w-10 h-10 text-[#E63946]" />
+                  </div>
+                </div>
+
+                <h2 className="text-2xl font-black text-white mb-1 tracking-widest uppercase">⚔ Stanza del Guardiano</h2>
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg,transparent,rgba(230,57,70,0.6))' }} />
+                  <span className="text-[#E63946] text-xs font-bold uppercase tracking-[0.3em]">Boss Arena</span>
+                  <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg,rgba(230,57,70,0.6),transparent)' }} />
+                </div>
+
+                <div className="rounded-2xl p-5 mb-6" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <p className="text-white/90 text-base leading-relaxed font-medium">
+                    🛠️ La funzione Boss non è ancora disponibile.
+                  </p>
+                  <p className="text-white/50 text-sm mt-2">
+                    Stiamo sviluppando per voi! 😊
+                  </p>
+                  <div className="mt-4 flex items-center justify-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-[#E63946] animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-2 h-2 rounded-full bg-[#ff8c00] animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-2 h-2 rounded-full bg-[#D4AF37] animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setShowBossPopup(false);
+                    bossPopupCooldownRef.current = false;
+                    if (gameRef.current) gameRef.current.setPaused(false);
+                  }}
+                  className="w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all duration-200 hover:scale-105 active:scale-95"
+                  style={{ background: 'linear-gradient(135deg,#E63946,#c0212c)', color: 'white', boxShadow: '0 4px 24px rgba(230,57,70,0.4)' }}
+                >
+                  Torna al Dungeon
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Modals Layer */}
       <AnimatePresence>

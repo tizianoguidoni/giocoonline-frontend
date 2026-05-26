@@ -1,9 +1,9 @@
 // Procedural textures via Canvas. No external assets — perfect for a dark fantasy aesthetic.
 // Each zone gets its own wall/floor pattern.
+// Wall textures are now FULLY PROCEDURAL to avoid white walls when PNG files fail to load.
 
 import * as THREE from 'three';
 
-const loader = new THREE.TextureLoader();
 
 function makeCanvas(size = 256) {
   const c = document.createElement('canvas');
@@ -19,34 +19,95 @@ function finalize(c, opts = {}) {
   return tex;
 }
 
-// --- Wall textures per zone ---
+// --- Wall textures per zone (100% procedural — no external files needed) ---
 
 export function dungeonWallTexture() {
-  // Use the real rock texture generated
-  const tex = loader.load('/textures/maze/rock_wall.png');
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(1, 1);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 4;
-  return tex;
+  // Stone blocks with cracks and grime — dark dungeon look
+  const { c, ctx } = makeCanvas(256);
+  ctx.fillStyle = '#1a1210'; ctx.fillRect(0, 0, 256, 256);
+  // Stone block grid
+  const bw = 64, bh = 48;
+  for (let row = 0; row < 6; row++) {
+    for (let col = 0; col < 4; col++) {
+      const offset = (row % 2) * 32;
+      const v = 28 + Math.random() * 18;
+      const r = v + 4, g = v - 2, b = v - 4;
+      ctx.fillStyle = `rgb(${r|0},${g|0},${b|0})`;
+      ctx.fillRect(col * bw + offset, row * bh + 2, bw - 3, bh - 3);
+      // Inner shadow
+      ctx.fillStyle = `rgba(0,0,0,${0.2 + Math.random() * 0.3})`;
+      ctx.fillRect(col * bw + offset + 1, row * bh + 3, bw - 5, 4);
+    }
+  }
+  // Crack lines
+  ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 1;
+  for (let i = 0; i < 6; i++) {
+    ctx.beginPath();
+    let x = Math.random() * 256, y = Math.random() * 256;
+    ctx.moveTo(x, y);
+    for (let j = 0; j < 4; j++) { x += (Math.random()-0.5)*20; y += Math.random()*12; ctx.lineTo(x,y); }
+    ctx.stroke();
+  }
+  // Moss/grime spots
+  for (let i = 0; i < 25; i++) {
+    ctx.fillStyle = `rgba(${20+Math.random()*15|0},${35+Math.random()*20|0},${15+Math.random()*10|0},${0.3+Math.random()*0.4})`;
+    ctx.beginPath(); ctx.arc(Math.random()*256, Math.random()*256, 3+Math.random()*8, 0, Math.PI*2); ctx.fill();
+  }
+  return finalize(c, { repeat: 1 });
 }
 
 export function gardenWallTexture() {
-  const tex = loader.load('/textures/maze/hedge_wall.png');
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(1, 1);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 4;
-  return tex;
+  // Hedge / overgrown stone wall
+  const { c, ctx } = makeCanvas(256);
+  ctx.fillStyle = '#1a2010'; ctx.fillRect(0, 0, 256, 256);
+  // Base stone
+  for (let i = 0; i < 120; i++) {
+    const v = 22 + Math.random() * 18;
+    ctx.fillStyle = `rgba(${v*0.7|0},${v*0.9|0},${v*0.5|0},${0.6+Math.random()*0.3})`;
+    ctx.fillRect(Math.random()*256, Math.random()*256, 4+Math.random()*10, 4+Math.random()*8);
+  }
+  // Green ivy patches
+  for (let i = 0; i < 200; i++) {
+    const gr = 50 + Math.random() * 60;
+    ctx.fillStyle = `rgba(${gr*0.3|0},${gr|0},${gr*0.25|0},${0.5+Math.random()*0.5})`;
+    ctx.fillRect(Math.random()*256, Math.random()*256, 2, 3+Math.random()*6);
+  }
+  // Flowers
+  for (let i = 0; i < 15; i++) {
+    ctx.fillStyle = `rgba(${200+Math.random()*55|0},${100+Math.random()*80|0},${50+Math.random()*50|0},0.8)`;
+    ctx.beginPath(); ctx.arc(Math.random()*256, Math.random()*256, 2+Math.random()*3, 0, Math.PI*2); ctx.fill();
+  }
+  return finalize(c, { repeat: 1 });
 }
 
 export function catacombsWallTexture() {
-  const tex = loader.load('/textures/maze/brick_wall.png');
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(1, 1);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 4;
-  return tex;
+  // Aged brick — dark red/brown
+  const { c, ctx } = makeCanvas(256);
+  ctx.fillStyle = '#0e0a08'; ctx.fillRect(0, 0, 256, 256);
+  // Brick rows
+  const bw = 52, bh = 28;
+  for (let row = 0; row < 10; row++) {
+    for (let col = 0; col < 6; col++) {
+      const offset = (row % 2) * 26;
+      const v = 55 + Math.random() * 30;
+      ctx.fillStyle = `rgb(${v|0},${v*0.38|0},${v*0.22|0})`;
+      ctx.fillRect(col * bw + offset, row * bh + 2, bw - 4, bh - 4);
+      // Mortar shadow
+      ctx.fillStyle = `rgba(0,0,0,${0.25+Math.random()*0.2})`;
+      ctx.fillRect(col * bw + offset, row * bh + bh - 5, bw - 4, 4);
+    }
+  }
+  // Dark stains
+  for (let i = 0; i < 20; i++) {
+    ctx.fillStyle = `rgba(0,0,0,${0.3+Math.random()*0.4})`;
+    ctx.beginPath(); ctx.arc(Math.random()*256, Math.random()*256, 5+Math.random()*15, 0, Math.PI*2); ctx.fill();
+  }
+  // Bone dust / pale speckles
+  for (let i = 0; i < 40; i++) {
+    ctx.fillStyle = `rgba(180,160,130,${Math.random()*0.3})`;
+    ctx.fillRect(Math.random()*256, Math.random()*256, 1, 1);
+  }
+  return finalize(c, { repeat: 1 });
 }
 
 export function genericCeilingTexture() {

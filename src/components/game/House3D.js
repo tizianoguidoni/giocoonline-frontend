@@ -293,22 +293,22 @@ function Table() {
 }
 
 /* ───────────────── Player controller with WASD + collisions ───────────────── */
-function Player({ controlsRef }) {
+function Player({ controlsRef, chestOpen }) {
   const { camera } = useThree();
   const velocity = useRef(new THREE.Vector3());
   const keys = useRef({});
 
   useEffect(() => {
     camera.position.set(0, 1.6, 0);
-    const onDown = (e) => { keys.current[e.code] = true; };
+    const onDown = (e) => { if (!chestOpen) keys.current[e.code] = true; };
     const onUp = (e) => { keys.current[e.code] = false; };
     window.addEventListener('keydown', onDown);
     window.addEventListener('keyup', onUp);
     return () => { window.removeEventListener('keydown', onDown); window.removeEventListener('keyup', onUp); };
-  }, [camera]);
+  }, [camera, chestOpen]);
 
   useFrame((_, delta) => {
-    if (!controlsRef.current?.isLocked) return;
+    if (chestOpen || !controlsRef.current?.isLocked) return;
     const k = keys.current;
     const dir = new THREE.Vector3();
     const front = new THREE.Vector3();
@@ -427,8 +427,8 @@ function Scene({ onChestOpen, chestOpen }) {
       <Landscape />
 
       {/* Controls */}
-      <PointerLockControls ref={controlsRef} />
-      <Player controlsRef={controlsRef} />
+      {!chestOpen && <PointerLockControls ref={controlsRef} />}
+      <Player controlsRef={controlsRef} chestOpen={chestOpen} />
     </>
   );
 }

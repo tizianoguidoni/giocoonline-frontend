@@ -311,13 +311,27 @@ export default function GamePage() {
           <div className="gold-framed-panel rounded-xl p-4" data-testid="player-stats-panel">
             <div className="flex items-center gap-3 mb-4">
               <div className="relative">
-                <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.3)]">
-                  <img
+                <motion.div 
+                  whileHover={{ scale: 1.05, boxShadow: "0 0 25px rgba(212,175,55,0.6)" }}
+                  className="w-16 h-16 rounded-xl overflow-hidden border-2 border-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.3)] cursor-pointer relative group"
+                >
+                  <motion.img
                     src={CLASS_AVATARS[character?.char_class] || CLASS_AVATARS.warrior}
                     alt={character?.name}
                     className="w-full h-full object-cover"
+                    animate={{
+                      scale: [1, 1.04, 1],
+                    }}
+                    transition={{
+                      duration: 4,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
                   />
-                </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-[#D4AF37] animate-pulse" />
+                  </div>
+                </motion.div>
                 <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#9D4CDD] flex items-center justify-center text-xs font-bold text-white">
                   {character?.level}
                 </div>

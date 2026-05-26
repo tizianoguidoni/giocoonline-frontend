@@ -68,6 +68,7 @@ export class World {
       const geo = new THREE.BoxGeometry(CELL_SIZE, wallH, CELL_SIZE);
       const mat = this._wallMaterialForZone(zone);
       const mesh = new THREE.InstancedMesh(geo, mat, positions.length);
+      mesh.userData.isWall = true;
       const dummy = new THREE.Object3D();
 
       for (let i = 0; i < positions.length; i++) {
@@ -87,7 +88,7 @@ export class World {
         colMesh.position.set(p.x, CEILING_H / 2, p.z);
         colMesh.userData.halfX = CELL_SIZE / 2;
         colMesh.userData.halfZ = CELL_SIZE / 2;
-        colMesh.userData.isWall = true;
+        colMesh.userData.isCollisionWall = true;
         this.scene.add(colMesh);
         this.wallMeshes.push(colMesh);
       }
