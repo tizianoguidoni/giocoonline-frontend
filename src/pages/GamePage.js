@@ -19,14 +19,14 @@ import {
   ShoppingBag, Shirt
 } from 'lucide-react';
 import LanguageSelector from '@/components/LanguageSelector';
-import InventoryPanel from '@/components/game/InventoryPanel';
+import InventorySystem3D from '@/components/game/InventorySystem3D';
 import QuestsPanel from '@/components/game/QuestsPanel';
 import ClanPanel from '@/components/game/ClanPanel';
 import AdminPanel from '@/components/game/AdminPanel';
 import CraftingPanel from '@/components/game/CraftingPanel';
 import BossPanel from '@/components/game/BossPanel';
 import ShopPanel from '@/components/game/ShopPanel';
-import EquipmentPanel from '@/components/game/EquipmentPanel';
+// EquipmentPanel replaced by InventorySystem3D
 import Maze3D from '@/components/game/Maze3D';
 import House3D from '@/components/game/House3D';
 import Arena3D from '@/components/game/Arena3D';
@@ -605,8 +605,8 @@ export default function GamePage() {
               )}
               
               {activeTab === 'inventory' && (
-                <motion.div key="inventory" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                  <InventoryPanel />
+                <motion.div key="inventory" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ height: '100%' }}>
+                  <InventorySystem3D />
                 </motion.div>
               )}
               
@@ -644,8 +644,8 @@ export default function GamePage() {
               )}
               
               {activeTab === 'equipment' && (
-                <motion.div key="equipment" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                  <EquipmentPanel />
+                <motion.div key="equipment" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ height: '100%' }}>
+                  <InventorySystem3D />
                 </motion.div>
               )}
               
