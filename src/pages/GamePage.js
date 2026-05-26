@@ -511,18 +511,7 @@ export default function GamePage() {
                   exit={{ opacity: 0 }}
                   className="h-full w-full relative"
                 >
-                  {currentLocation.id === 'home' || isInHouse ? (
-                    <House3D 
-                      onExit={() => { 
-                        // Set location to the first adventure location (forest) when exiting the house
-                        setCurrentLocation(LOCATIONS[1]); 
-                        setIsInHouse(false);
-                        if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); 
-                      }} 
-                      onGoToVillage={() => { setIsInHouse(false); setIsInVillage(true); }} 
-                      onGoToMaze={() => { setIsInHouse(false); setIsInMaze(true); }} 
-                    />
-                  ) : isInMaze ? (
+                  {isInMaze ? (
                     <Maze3D onExit={async (results) => {
                       setIsInMaze(false);
                       if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
@@ -539,6 +528,17 @@ export default function GamePage() {
                     }} />
                   ) : isInVillage ? (
                     <Village3D onExit={() => { setIsInVillage(false); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); }} />
+                  ) : (currentLocation.id === 'home' || isInHouse) ? (
+                    <House3D 
+                      onExit={() => { 
+                        // Set location to the first adventure location (forest) when exiting the house
+                        setCurrentLocation(LOCATIONS[1]); 
+                        setIsInHouse(false);
+                        if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); 
+                      }} 
+                      onGoToVillage={() => { setIsInHouse(false); setIsInVillage(true); }} 
+                      onGoToMaze={() => { setIsInHouse(false); setIsInMaze(true); }} 
+                    />
                   ) : (
                     <div className="h-full flex flex-col items-center justify-center p-8 text-center">
                       <div className="max-w-2xl gold-framed-panel p-12 bg-black/60 backdrop-blur-md rounded-3xl shadow-[0_0_50px_rgba(212,175,55,0.15)]">
