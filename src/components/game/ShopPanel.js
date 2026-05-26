@@ -81,7 +81,10 @@ export default function ShopPanel({ initialCategory = 'all', onClose }) {
     try {
       await axios.post(`${API}/shop/buy`, {
         item_id: selectedItem.id,
-        quantity: quantity
+        quantity: quantity,
+        custom_name: selectedItem.id !== selectedItem.name ? selectedItem.name : undefined,
+        custom_stats: selectedItem.id !== selectedItem.name ? selectedItem.stats : undefined,
+        custom_rarity: selectedItem.id !== selectedItem.name ? selectedItem.rarity : undefined
       });
       
       toast.success(`Acquistato ${quantity}x ${selectedItem.name} per ${totalCost}G!`);
