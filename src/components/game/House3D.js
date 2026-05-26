@@ -356,6 +356,7 @@ function ChestInventory({ isOpen, onClose }) {
   });
 
   const [localBackpack, setLocalBackpack] = useState([]);
+  const [sliderModal, setSliderModal] = useState(null); // { item, direction, max, value }
 
   useEffect(() => {
     if (isOpen && inventory) {
@@ -368,14 +369,20 @@ function ChestInventory({ isOpen, onClose }) {
     localStorage.setItem('house_chest', JSON.stringify(items)); 
   };
 
-  const handleDeposit = (item) => {
+  const handleDeposit = (item, forceQty = null) => {
+    if (forceQty === null && item.quantity > 1) {
+      setSliderModal({ item, direction: 'deposit', max: item.quantity, value: Math.min(5, item.quantity) });
+      return;
+    }
+    const transferQty = forceQty !== null ? forceQty : 1;
+
     let updatedBackpack = [...localBackpack];
     const foundIdx = updatedBackpack.findIndex(i => i.id === item.id);
     if (foundIdx === -1) return;
 
     const targetItem = updatedBackpack[foundIdx];
-    if (targetItem.quantity > 1) {
-      targetItem.quantity -= 1;
+    if (targetItem.quantity > transferQty) {
+      targetItem.quantity -= transferQty;
     } else {
       updatedBackpack.splice(foundIdx, 1);
     }
@@ -384,7 +391,7 @@ function ChestInventory({ isOpen, onClose }) {
     let updatedStored = [...stored];
     const storedIdx = updatedStored.findIndex(i => i.item_id === item.item_id || i.name === item.name);
     if (storedIdx !== -1 && ['consumable', 'material', 'gem'].includes(item.item_type || item.type)) {
-      updatedStored[storedIdx].quantity = (updatedStored[storedIdx].quantity || 1) + 1;
+      updatedStored[storedIdx].quantity = (updatedStored[storedIdx].quantity || 1) + transferQty;
     } else {
       updatedStored.push({
         id: Date.now() + Math.random(),
@@ -393,20 +400,27 @@ function ChestInventory({ isOpen, onClose }) {
         item_type: item.item_type || item.type,
         rarity: item.rarity || 'common',
         stats: item.stats || {},
-        quantity: 1
+        quantity: transferQty
       });
     }
     save(updatedStored);
+    setSliderModal(null);
   };
 
-  const handleWithdraw = (item) => {
+  const handleWithdraw = (item, forceQty = null) => {
+    if (forceQty === null && item.quantity > 1) {
+      setSliderModal({ item, direction: 'withdraw', max: item.quantity, value: Math.min(5, item.quantity) });
+      return;
+    }
+    const transferQty = forceQty !== null ? forceQty : 1;
+
     let updatedStored = [...stored];
     const foundIdx = updatedStored.findIndex(i => i.id === item.id);
     if (foundIdx === -1) return;
 
     const targetItem = updatedStored[foundIdx];
-    if (targetItem.quantity > 1) {
-      targetItem.quantity -= 1;
+    if (targetItem.quantity > transferQty) {
+      targetItem.quantity -= transferQty;
     } else {
       updatedStored.splice(foundIdx, 1);
     }
@@ -415,7 +429,7 @@ function ChestInventory({ isOpen, onClose }) {
     let updatedBackpack = [...localBackpack];
     const bpIdx = updatedBackpack.findIndex(i => i.item_id === item.item_id || i.name === item.name);
     if (bpIdx !== -1 && ['consumable', 'material', 'gem'].includes(item.item_type || item.type)) {
-      updatedBackpack[bpIdx].quantity = (updatedBackpack[bpIdx].quantity || 1) + 1;
+      updatedBackpack[bpIdx].quantity = (updatedBackpack[bpIdx].quantity || 1) + transferQty;
     } else {
       updatedBackpack.push({
         id: item.item_id || item.id,
@@ -424,10 +438,11 @@ function ChestInventory({ isOpen, onClose }) {
         item_type: item.item_type || 'other',
         rarity: item.rarity || 'common',
         stats: item.stats || {},
-        quantity: 1
+        quantity: transferQty
       });
     }
     setLocalBackpack(updatedBackpack);
+    setSliderModal(null);
   };
 
   if (!isOpen) return null;
@@ -440,6 +455,7 @@ function ChestInventory({ isOpen, onClose }) {
       boxShadow: '0 0 80px rgba(212,175,55,0.4)', fontFamily: 'Inter, sans-serif', color: '#fff',
       display: 'flex', flexDirection: 'column', gap: 20
     }}>
+      {/* Title / Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(212,175,55,0.2)', paddingBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 24 }}>⚜</span>
@@ -454,7 +470,9 @@ function ChestInventory({ isOpen, onClose }) {
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, height: 380 }}>
+      {/* Two Column Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, height: 380, position: 'relative' }}>
+        {/* Left: Backpack */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, padding: 16 }}>
           <h4 style={{ margin: 0, fontSize: 14, color: '#A19BAD', letterSpacing: 2, textTransform: 'uppercase', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: 8 }}>💼 Il Tuo Zaino ({localBackpack.length})</h4>
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8, paddingRight: 4 }}>
@@ -483,6 +501,7 @@ function ChestInventory({ isOpen, onClose }) {
           </div>
         </div>
 
+        {/* Right: Chest Stored content */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(212,175,55,0.1)', borderRadius: 12, padding: 16 }}>
           <h4 style={{ margin: 0, fontSize: 14, color: '#D4AF37', letterSpacing: 2, textTransform: 'uppercase', borderBottom: '1px solid rgba(212,175,55,0.1)', paddingBottom: 8 }}>⚜ Contenuto Forziere ({stored.length})</h4>
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8, paddingRight: 4 }}>
@@ -510,6 +529,69 @@ function ChestInventory({ isOpen, onClose }) {
             ))}
           </div>
         </div>
+
+        {/* Quantity Slider Modal Overlay */}
+        {sliderModal && (
+          <div style={{
+            position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.85)',
+            borderRadius: 12, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            backdropFilter: 'blur(5px)', transition: 'all 0.2s'
+          }}>
+            <div style={{
+              width: 340, background: 'linear-gradient(135deg, #16101c 0%, #221630 100%)',
+              border: '2px solid #D4AF37', borderRadius: 16, padding: 24, textAlign: 'center',
+              boxShadow: '0 0 40px rgba(212,175,55,0.4)', color: '#fff'
+            }}>
+              <h4 style={{ margin: '0 0 12px 0', fontSize: 15, color: '#D4AF37', textTransform: 'uppercase', letterSpacing: 2, fontWeight: 900 }}>⚜ Seleziona Quantità ⚜</h4>
+              <p style={{ margin: '0 0 20px 0', fontSize: 12, color: '#A19BAD' }}>
+                {sliderModal.direction === 'deposit' ? 'Deposita' : 'Preleva'} <span style={{ color: '#fff', fontWeight: 'bold' }}>{sliderModal.item.name}</span>
+              </p>
+
+              <div style={{ fontSize: 32, fontWeight: 900, color: '#D4AF37', margin: '20px 0 10px 0', fontFamily: 'monospace' }}>
+                {sliderModal.value} <span style={{ fontSize: 14, color: '#6C667A' }}>/ {sliderModal.max}</span>
+              </div>
+
+              <input 
+                type="range" 
+                min="1" 
+                max={sliderModal.max} 
+                value={sliderModal.value} 
+                onChange={e => setSliderModal({ ...sliderModal, value: parseInt(e.target.value) })}
+                style={{
+                  width: '100%', height: 6, background: 'rgba(255,255,255,0.1)', outline: 'none',
+                  borderRadius: 3, cursor: 'pointer', accentColor: '#D4AF37', marginBottom: 24
+                }}
+              />
+
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button 
+                  onClick={() => setSliderModal(null)} 
+                  style={{
+                    flex: 1, padding: '10px 0', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)',
+                    color: '#A19BAD', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 'bold', transition: 'all 0.15s'
+                  }}
+                >
+                  Annulla
+                </button>
+                <button 
+                  onClick={() => {
+                    if (sliderModal.direction === 'deposit') {
+                      handleDeposit(sliderModal.item, sliderModal.value);
+                    } else {
+                      handleWithdraw(sliderModal.item, sliderModal.value);
+                    }
+                  }} 
+                  style={{
+                    flex: 1, padding: '10px 0', background: 'linear-gradient(135deg, #D4AF37, #B58E29)', border: 'none',
+                    color: '#000', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 'bold', transition: 'all 0.15s'
+                  }}
+                >
+                  Conferma
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       <p style={{ textAlign: 'center', color: '#666', fontSize: 11, margin: 0 }}>Gli oggetti depositati rimarranno salvati nel forziere di questa casa.</p>
     </div>
