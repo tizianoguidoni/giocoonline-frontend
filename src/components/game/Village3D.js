@@ -243,7 +243,12 @@ function Building({ position, size = [6, 5, 5], color = '#7a6a54', roofColor = '
       <mesh position={[1.5, h * 0.6, d / 2 + 0.01]}>
         <planeGeometry args={[0.9, 0.9]} />
         <meshStandardMaterial color="#4a7a9b" transparent opacity={0.6} side={THREE.DoubleSide} />
-     /* ══════════════════════════════════════════════
+      </mesh>
+    </group>
+  );
+}
+
+/* ══════════════════════════════════════════════
    NPC — static premium ambient villager / shopkeeper
    ══════════════════════════════════════════════ */
 function NPC({ startPos, color = '#e8c88a', name, playerPos }) {
