@@ -30,6 +30,7 @@ import EquipmentPanel from '@/components/game/EquipmentPanel';
 import Maze3D from '@/components/game/Maze3D';
 import House3D from '@/components/game/House3D';
 import Arena3D from '@/components/game/Arena3D';
+import Village3D from '@/components/game/Village3D';
 import { SeasonPassUI } from '@/components/game/SeasonPassUI';
 import { SEASONS } from '@/game/SeasonPassSystem';
 
@@ -99,6 +100,7 @@ export default function GamePage() {
   const [isInMaze, setIsInMaze] = useState(false);
   const [isInHouse, setIsInHouse] = useState(false);
   const [isInArena, setIsInArena] = useState(false);
+  const [isInVillage, setIsInVillage] = useState(false);
   const [selectedArenaBoss, setSelectedArenaBoss] = useState(null);
   const [showSeasonPass, setShowSeasonPass] = useState(false);
   const chatEndRef = useRef(null);
@@ -511,7 +513,7 @@ export default function GamePage() {
                   className="h-full w-full relative"
                 >
                   {isInHouse ? (
-                    <House3D onExit={() => { setIsInHouse(false); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); }} />
+                    <House3D onExit={() => { setIsInHouse(false); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); }} onGoToVillage={() => { setIsInHouse(false); setIsInVillage(true); }} />
                   ) : isInMaze ? (
                     <Maze3D onExit={async (results) => {
                       setIsInMaze(false);
@@ -527,6 +529,8 @@ export default function GamePage() {
                         } catch (err) { console.error(err); toast.error("Errore salvataggio!"); }
                       }
                     }} />
+                  ) : isInVillage ? (
+                    <Village3D onExit={() => { setIsInVillage(false); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); }} />
                   ) : currentLocation.id === 'home' ? (
                     <div className="h-full flex flex-col items-center justify-center p-8 text-center">
                       <div className="max-w-2xl gold-framed-panel p-12 bg-black/60 backdrop-blur-md rounded-3xl shadow-[0_0_50px_rgba(139,90,43,0.2)]">
@@ -546,6 +550,29 @@ export default function GamePage() {
                           <Button onClick={() => { setIsInHouse(true); document.documentElement.requestFullscreen().catch(() => {}); }}
                             className="px-16 py-10 bg-gradient-to-r from-[#8B5A2B] to-[#D4AF37] text-black font-black text-2xl hover:scale-110 active:scale-95 transition-all rounded-2xl shadow-[0_15px_40px_rgba(139,90,43,0.4)] group">
                             <span className="group-hover:tracking-widest transition-all">🏠 ENTRA IN CASA</span>
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : currentLocation.id === 'town' ? (
+                    <div className="h-full flex flex-col items-center justify-center p-8 text-center">
+                      <div className="max-w-2xl gold-framed-panel p-12 bg-black/60 backdrop-blur-md rounded-3xl shadow-[0_0_50px_rgba(42,157,143,0.2)]">
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="mb-8">
+                          <Globe className="w-24 h-24 text-[#2A9D8F] mx-auto mb-6 drop-shadow-[0_0_15px_rgba(42,157,143,0.5)]" />
+                          <h2 className="text-4xl font-black text-white tracking-[0.2em] uppercase mb-4">VILLAGGIO MEDIEVALE</h2>
+                          <div className="h-1 w-32 bg-[#2A9D8F] mx-auto mb-6" />
+                          <p className="text-[#A19BAD] text-lg leading-relaxed max-w-md mx-auto">
+                            La piazza centrale del regno. Incontra mercanti, fabbri e
+                            abitanti del villaggio. Esplora liberamente in 3D.
+                            <br/><span className="text-[#2A9D8F]/70 text-sm mt-4 block italic">
+                              WASD muovi · Mouse guarda · E interagisci · ESC esci
+                            </span>
+                          </p>
+                        </motion.div>
+                        <div className="flex justify-center">
+                          <Button onClick={() => { setIsInVillage(true); document.documentElement.requestFullscreen().catch(() => {}); }}
+                            className="px-16 py-10 bg-gradient-to-r from-[#2A9D8F] to-[#38c9b9] text-black font-black text-2xl hover:scale-110 active:scale-95 transition-all rounded-2xl shadow-[0_15px_40px_rgba(42,157,143,0.4)] group">
+                            <span className="group-hover:tracking-widest transition-all">🏘️ ENTRA IN CITTÀ</span>
                           </Button>
                         </div>
                       </div>
