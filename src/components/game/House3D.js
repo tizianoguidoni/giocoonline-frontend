@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Sky, PointerLockControls, useTexture, Html } from '@react-three/drei';
 import * as THREE from 'three';
+import { useGame } from '../../context/GameContext';
 
 /* ───────────────── constants ───────────────── */
 const ROOM = { w: 10, h: 4, d: 8 };
@@ -347,56 +348,170 @@ function Crosshair() {
 
 /* ───────────────── Inventory UI (chest panel) ───────────────── */
 function ChestInventory({ isOpen, onClose }) {
+  const { inventory } = useGame();
+  
+  // We track locally which items are deposited and which are withdrawn
   const [stored, setStored] = useState(() => {
     try { return JSON.parse(localStorage.getItem('house_chest') || '[]'); } catch { return []; }
   });
-  const [input, setInput] = useState('');
 
-  const save = (items) => { setStored(items); localStorage.setItem('house_chest', JSON.stringify(items)); };
-  const deposit = () => { if (!input.trim()) return; save([...stored, { name: input.trim(), id: Date.now() }]); setInput(''); };
-  const withdraw = (id) => save(stored.filter(i => i.id !== id));
+  const [localBackpack, setLocalBackpack] = useState([]);
+
+  useEffect(() => {
+    if (isOpen && inventory) {
+      setLocalBackpack(JSON.parse(JSON.stringify(inventory)));
+    }
+  }, [isOpen, inventory]);
+
+  const save = (items) => { 
+    setStored(items); 
+    localStorage.setItem('house_chest', JSON.stringify(items)); 
+  };
+
+  const handleDeposit = (item) => {
+    let updatedBackpack = [...localBackpack];
+    const foundIdx = updatedBackpack.findIndex(i => i.id === item.id);
+    if (foundIdx === -1) return;
+
+    const targetItem = updatedBackpack[foundIdx];
+    if (targetItem.quantity > 1) {
+      targetItem.quantity -= 1;
+    } else {
+      updatedBackpack.splice(foundIdx, 1);
+    }
+    setLocalBackpack(updatedBackpack);
+
+    let updatedStored = [...stored];
+    const storedIdx = updatedStored.findIndex(i => i.item_id === item.item_id || i.name === item.name);
+    if (storedIdx !== -1 && ['consumable', 'material', 'gem'].includes(item.item_type || item.type)) {
+      updatedStored[storedIdx].quantity = (updatedStored[storedIdx].quantity || 1) + 1;
+    } else {
+      updatedStored.push({
+        id: Date.now() + Math.random(),
+        name: item.name,
+        item_id: item.item_id || item.id,
+        item_type: item.item_type || item.type,
+        rarity: item.rarity || 'common',
+        stats: item.stats || {},
+        quantity: 1
+      });
+    }
+    save(updatedStored);
+  };
+
+  const handleWithdraw = (item) => {
+    let updatedStored = [...stored];
+    const foundIdx = updatedStored.findIndex(i => i.id === item.id);
+    if (foundIdx === -1) return;
+
+    const targetItem = updatedStored[foundIdx];
+    if (targetItem.quantity > 1) {
+      targetItem.quantity -= 1;
+    } else {
+      updatedStored.splice(foundIdx, 1);
+    }
+    save(updatedStored);
+
+    let updatedBackpack = [...localBackpack];
+    const bpIdx = updatedBackpack.findIndex(i => i.item_id === item.item_id || i.name === item.name);
+    if (bpIdx !== -1 && ['consumable', 'material', 'gem'].includes(item.item_type || item.type)) {
+      updatedBackpack[bpIdx].quantity = (updatedBackpack[bpIdx].quantity || 1) + 1;
+    } else {
+      updatedBackpack.push({
+        id: item.item_id || item.id,
+        item_id: item.item_id || item.id,
+        name: item.name,
+        item_type: item.item_type || 'other',
+        rarity: item.rarity || 'common',
+        stats: item.stats || {},
+        quantity: 1
+      });
+    }
+    setLocalBackpack(updatedBackpack);
+  };
 
   if (!isOpen) return null;
 
   return (
     <div style={{
       position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
-      width: 420, background: 'linear-gradient(135deg, #1a1208 0%, #2a1a0a 100%)',
-      border: '2px solid #D4AF37', borderRadius: 16, padding: 24, zIndex: 200,
-      boxShadow: '0 0 60px rgba(212,175,55,0.3)', fontFamily: 'Inter, sans-serif', color: '#fff'
+      width: 760, background: 'linear-gradient(135deg, #100b14 0%, #1a1224 100%)',
+      border: '2px solid #D4AF37', borderRadius: 20, padding: 28, zIndex: 200,
+      boxShadow: '0 0 80px rgba(212,175,55,0.4)', fontFamily: 'Inter, sans-serif', color: '#fff',
+      display: 'flex', flexDirection: 'column', gap: 20
     }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h3 style={{ margin: 0, fontSize: 18, color: '#D4AF37', letterSpacing: 3, textTransform: 'uppercase' }}>⚜ Forziere ⚜</h3>
-        <button onClick={onClose} style={{ background: 'none', border: '1px solid #666', color: '#999', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontSize: 12 }}>
-          ESC
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(212,175,55,0.2)', paddingBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 24 }}>⚜</span>
+          <h3 style={{ margin: 0, fontSize: 20, color: '#D4AF37', letterSpacing: 4, textTransform: 'uppercase', fontWeight: 900 }}>Forziere di Casa</h3>
+        </div>
+        <button onClick={onClose} style={{
+          background: 'rgba(212,175,55,0.1)', border: '1px solid #D4AF37', color: '#D4AF37',
+          borderRadius: 8, padding: '6px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 'bold', transition: 'all 0.2s'
+        }} onMouseEnter={e => { e.currentTarget.style.background = '#D4AF37'; e.currentTarget.style.color = '#000'; }}
+           onMouseLeave={e => { e.currentTarget.style.background = 'rgba(212,175,55,0.1)'; e.currentTarget.style.color = '#D4AF37'; }}>
+          CHIUDI [ESC]
         </button>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-        <input value={input} onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && deposit()}
-          placeholder="Nome oggetto..."
-          style={{ flex: 1, background: '#111', border: '1px solid #444', borderRadius: 8, padding: '8px 12px', color: '#fff', fontSize: 13, outline: 'none' }} />
-        <button onClick={deposit} style={{ background: 'linear-gradient(135deg, #D4AF37, #B58E29)', border: 'none', borderRadius: 8, padding: '8px 16px', color: '#000', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>
-          Deposita
-        </button>
-      </div>
-
-      <div style={{ maxHeight: 220, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-        {stored.length === 0 && <p style={{ gridColumn: 'span 4', textAlign: 'center', color: '#666', fontSize: 13, padding: 20 }}>Il forziere è vuoto</p>}
-        {stored.map(item => (
-          <div key={item.id} onClick={() => withdraw(item.id)}
-            style={{ background: '#1a1208', border: '1px solid #333', borderRadius: 8, padding: 10, textAlign: 'center', cursor: 'pointer', fontSize: 11, transition: 'all 0.15s' }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = '#D4AF37'; e.currentTarget.style.boxShadow = '0 0 10px rgba(212,175,55,0.3)'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.boxShadow = 'none'; }}>
-            <div style={{ fontSize: 20, marginBottom: 4 }}>📦</div>
-            <div style={{ color: '#ccc', lineHeight: 1.2 }}>{item.name}</div>
-            <div style={{ color: '#666', fontSize: 9, marginTop: 4 }}>click = preleva</div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, height: 380 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, padding: 16 }}>
+          <h4 style={{ margin: 0, fontSize: 14, color: '#A19BAD', letterSpacing: 2, textTransform: 'uppercase', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: 8 }}>💼 Il Tuo Zaino ({localBackpack.length})</h4>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8, paddingRight: 4 }}>
+            {localBackpack.length === 0 && <p style={{ textAlign: 'center', color: '#666', fontSize: 13, paddingTop: 100 }}>Lo zaino è vuoto</p>}
+            {localBackpack.map(item => (
+              <div key={item.id} style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)',
+                borderRadius: 8, padding: '10px 14px', transition: 'all 0.2s'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 20 }}>{item.item_type === 'weapon' ? '⚔️' : item.item_type === 'armor' ? '🛡️' : '📦'}</span>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 'bold', color: item.rarity === 'legendary' ? '#ff8c00' : item.rarity === 'epic' ? '#a370f7' : item.rarity === 'rare' ? '#4cc9f0' : '#fff' }}>{item.name}</div>
+                    <div style={{ fontSize: 10, color: '#A19BAD' }}>Q.tà: {item.quantity || 1}</div>
+                  </div>
+                </div>
+                <button onClick={() => handleDeposit(item)} style={{
+                  background: 'linear-gradient(135deg, #D4AF37, #B58E29)', border: 'none',
+                  borderRadius: 6, padding: '6px 12px', color: '#000', fontWeight: 'bold', cursor: 'pointer', fontSize: 11, transition: 'all 0.15s'
+                }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseLeave={e => e.currentTarget.style.transform = 'none'}>
+                  Deposita ➔
+                </button>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
 
-      <p style={{ textAlign: 'center', color: '#555', fontSize: 10, marginTop: 12 }}>{stored.length} / 20 oggetti</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(212,175,55,0.1)', borderRadius: 12, padding: 16 }}>
+          <h4 style={{ margin: 0, fontSize: 14, color: '#D4AF37', letterSpacing: 2, textTransform: 'uppercase', borderBottom: '1px solid rgba(212,175,55,0.1)', paddingBottom: 8 }}>⚜ Contenuto Forziere ({stored.length})</h4>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8, paddingRight: 4 }}>
+            {stored.length === 0 && <p style={{ textAlign: 'center', color: '#666', fontSize: 13, paddingTop: 100 }}>Il forziere è vuoto</p>}
+            {stored.map(item => (
+              <div key={item.id} style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                background: 'rgba(212,175,55,0.02)', border: '1px solid rgba(212,175,55,0.05)',
+                borderRadius: 8, padding: '10px 14px', transition: 'all 0.2s'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 20 }}>{item.item_type === 'weapon' ? '⚔️' : item.item_type === 'armor' ? '🛡️' : '📦'}</span>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 'bold', color: item.rarity === 'legendary' ? '#ff8c00' : item.rarity === 'epic' ? '#a370f7' : item.rarity === 'rare' ? '#4cc9f0' : '#fff' }}>{item.name}</div>
+                    <div style={{ fontSize: 10, color: '#A19BAD' }}>Q.tà: {item.quantity || 1}</div>
+                  </div>
+                </div>
+                <button onClick={() => handleWithdraw(item)} style={{
+                  background: 'rgba(230,57,70,0.2)', border: '1px solid rgba(230,57,70,0.6)',
+                  borderRadius: 6, padding: '6px 12px', color: '#ff6b6b', fontWeight: 'bold', cursor: 'pointer', fontSize: 11, transition: 'all 0.15s'
+                }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseLeave={e => e.currentTarget.style.transform = 'none'}>
+                  ➔ Preleva
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <p style={{ textAlign: 'center', color: '#666', fontSize: 11, margin: 0 }}>Gli oggetti depositati rimarranno salvati nel forziere di questa casa.</p>
     </div>
   );
 }
