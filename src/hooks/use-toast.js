@@ -1,42 +1,57 @@
 "use client";
 // Inspired by react-hot-toast library
-import * as React from "react"
+import * as React from "react";
 
-const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_LIMIT = 1;
+const TOAST_REMOVE_DELAY = 1000000;
 
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
   UPDATE_TOAST: "UPDATE_TOAST",
   DISMISS_TOAST: "DISMISS_TOAST",
   REMOVE_TOAST: "REMOVE_TOAST"
-}
+};
 
-let count = 0
+let count = 0;
 
+/**
+ * Generates a unique string ID.
+ * @returns {string} Unique ID.
+ */
 function genId() {
-  count = (count + 1) % Number.MAX_SAFE_INTEGER
+  count = (count + 1) % Number.MAX_SAFE_INTEGER;
   return count.toString();
 }
 
-const toastTimeouts = new Map()
+/** @type {Map<string, NodeJS.Timeout>} */
+const toastTimeouts = new Map();
 
+/**
+ * Adds a toast to the removal queue.
+ * @param {string} toastId - ID of the toast to remove.
+ */
 const addToRemoveQueue = (toastId) => {
   if (toastTimeouts.has(toastId)) {
-    return
+    return;
   }
 
   const timeout = setTimeout(() => {
-    toastTimeouts.delete(toastId)
+    toastTimeouts.delete(toastId);
     dispatch({
       type: "REMOVE_TOAST",
       toastId: toastId,
-    })
-  }, TOAST_REMOVE_DELAY)
+    });
+  }, TOAST_REMOVE_DELAY);
 
-  toastTimeouts.set(toastId, timeout)
-}
+  toastTimeouts.set(toastId, timeout);
+};
 
+/**
+ * Reducer function for state management.
+ * @param {Object} state - Current state.
+ * @param {Object} action - Dispatched action.
+ * @returns {Object} New state.
+ */
 export const reducer = (state, action) => {
   switch (action.type) {
     case "ADD_TOAST":
@@ -53,16 +68,14 @@ export const reducer = (state, action) => {
       };
 
     case "DISMISS_TOAST": {
-      const { toastId } = action
+      const { toastId } = action;
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
       if (toastId) {
-        addToRemoveQueue(toastId)
+        addToRemoveQueue(toastId);
       } else {
         state.toasts.forEach((toast) => {
-          addToRemoveQueue(toast.id)
-        })
+          addToRemoveQueue(toast.id);
+        });
       }
 
       return {
@@ -81,37 +94,50 @@ export const reducer = (state, action) => {
         return {
           ...state,
           toasts: [],
-        }
+        };
       }
       return {
         ...state,
         toasts: state.toasts.filter((t) => t.id !== action.toastId),
       };
+    default:
+      return state;
   }
-}
+};
 
-const listeners = []
+/** @type {Array<function(Object): void>} */
+const listeners = [];
 
-let memoryState = { toasts: [] }
+/** @type {Object} */
+let memoryState = { toasts: [] };
 
+/**
+ * Dispatches an action and notifies listeners.
+ * @param {Object} action - Action to dispatch.
+ */
 function dispatch(action) {
-  memoryState = reducer(memoryState, action)
+  memoryState = reducer(memoryState, action);
   listeners.forEach((listener) => {
-    listener(memoryState)
-  })
+    listener(memoryState);
+  });
 }
 
+/**
+ * Triggers a new toast notification.
+ * @param {Object} props - Toast properties.
+ * @returns {Object} Controller helper.
+ */
 function toast({
   ...props
 }) {
-  const id = genId()
+  const id = genId();
 
-  const update = (props) =>
+  const update = (updatedProps) =>
     dispatch({
       type: "UPDATE_TOAST",
-      toast: { ...props, id },
-    })
-  const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
+      toast: { ...updatedProps, id },
+    });
+  const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id });
 
   dispatch({
     type: "ADD_TOAST",
@@ -120,30 +146,34 @@ function toast({
       id,
       open: true,
       onOpenChange: (open) => {
-        if (!open) dismiss()
+        if (!open) dismiss();
       },
     },
-  })
+  });
 
   return {
     id: id,
     dismiss,
     update,
-  }
+  };
 }
 
+/**
+ * Custom React Hook for retrieving active toast list and dispatching.
+ * @returns {Object} React context hook contents.
+ */
 function useToast() {
-  const [state, setState] = React.useState(memoryState)
+  const [state, setState] = React.useState(memoryState);
 
   React.useEffect(() => {
-    listeners.push(setState)
+    listeners.push(setState);
     return () => {
-      const index = listeners.indexOf(setState)
+      const index = listeners.indexOf(setState);
       if (index > -1) {
-        listeners.splice(index, 1)
+        listeners.splice(index, 1);
       }
     };
-  }, [state])
+  }, []); // Solves the hook mounting and listener leak issue
 
   return {
     ...state,
@@ -152,4 +182,4 @@ function useToast() {
   };
 }
 
-export { useToast, toast }
+export { useToast, toast };
