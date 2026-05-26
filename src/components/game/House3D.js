@@ -293,20 +293,154 @@ function Table() {
   );
 }
 
-/* ───────────────── Player controller with WASD + collisions ───────────────── */
-function Player({ controlsRef, chestOpen }) {
+/* ───────────────── Village Door (back wall → Villaggio) ───────────────── */
+function VillageDoor({ near }) {
+  const glowRef = useRef();
+  useFrame(({ clock }) => {
+    if (glowRef.current) {
+      glowRef.current.intensity = 1.2 + Math.sin(clock.elapsedTime * 2.5) * 0.6;
+    }
+  });
+  return (
+    <group position={[0, 0, -ROOM.d / 2]}>
+      {/* Left pillar */}
+      <mesh castShadow position={[-1.1, 1.5, 0.18]}>
+        <boxGeometry args={[0.3, 3.2, 0.36]} />
+        <WoodMat color="#2a1505" />
+      </mesh>
+      {/* Right pillar */}
+      <mesh castShadow position={[1.1, 1.5, 0.18]}>
+        <boxGeometry args={[0.3, 3.2, 0.36]} />
+        <WoodMat color="#2a1505" />
+      </mesh>
+      {/* Arch top */}
+      <mesh castShadow position={[0, 3.15, 0.18]}>
+        <boxGeometry args={[2.55, 0.38, 0.36]} />
+        <WoodMat color="#1e0f03" />
+      </mesh>
+      {/* Portal plane */}
+      <mesh position={[0, 1.55, 0.12]}>
+        <planeGeometry args={[1.92, 2.9]} />
+        <meshStandardMaterial
+          color="#0d2a6a" emissive="#1a44bb"
+          emissiveIntensity={near ? 3.0 : 0.7}
+          transparent opacity={near ? 0.65 : 0.28}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      {/* Glow shimmer */}
+      <pointLight ref={glowRef} color="#4488ff" intensity={1.5} distance={7} position={[0, 1.5, 0.8]} castShadow={false} />
+      {/* Label */}
+      {near && (
+        <Html position={[0, 3.85, 0.2]} center style={{ pointerEvents: 'none' }}>
+          <div style={{
+            background: 'rgba(0,8,28,0.92)', border: '1.5px solid #4488ff',
+            borderRadius: 10, padding: '9px 20px',
+            color: '#88ccff', fontFamily: 'Inter, sans-serif',
+            fontSize: 13, fontWeight: 700, textAlign: 'center',
+            whiteSpace: 'nowrap', boxShadow: '0 0 20px rgba(68,136,255,0.55)',
+          }}>
+            🏘️ Vuoi andare al Villaggio?<br />
+            <span style={{ fontSize: 10, color: '#88bbff88' }}>[E] Attraversa la porta</span>
+          </div>
+        </Html>
+      )}
+    </group>
+  );
+}
+
+/* ───────────────── Maze Portal (left wall → Labirinto) ───────────────── */
+function MazePortal({ near }) {
+  const ringRef  = useRef();
+  const ring2Ref = useRef();
+  const glowRef  = useRef();
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime;
+    if (ringRef.current)  ringRef.current.rotation.z  =  t * 1.6;
+    if (ring2Ref.current) ring2Ref.current.rotation.z = -t * 0.9;
+    if (glowRef.current)  glowRef.current.intensity = 1.8 + Math.sin(t * 4.5) * 0.9;
+  });
+  return (
+    <group position={[-ROOM.w / 2 + 0.05, 0, -1.5]}>
+      {/* Stone base */}
+      <mesh castShadow position={[0.05, 0.18, 0]}>
+        <cylinderGeometry args={[0.7, 0.9, 0.35, 16]} />
+        <meshStandardMaterial color="#2a2035" roughness={0.9} />
+      </mesh>
+      {/* Outer stone ring */}
+      <mesh position={[0.1, 2.05, 0]} rotation={[0, 0, 0]}>
+        <torusGeometry args={[0.88, 0.20, 14, 48]} />
+        <meshStandardMaterial color="#1e1830" roughness={0.75} metalness={0.35} />
+      </mesh>
+      {/* Spinning rune ring */}
+      <mesh ref={ringRef} position={[0.1, 2.05, 0]}>
+        <torusGeometry args={[0.72, 0.055, 8, 32]} />
+        <meshStandardMaterial color="#cc55ff" emissive="#9922cc" emissiveIntensity={2.0} />
+      </mesh>
+      {/* Counter-spinning inner ring */}
+      <mesh ref={ring2Ref} position={[0.1, 2.05, 0.04]}>
+        <torusGeometry args={[0.50, 0.035, 8, 32]} />
+        <meshStandardMaterial color="#ff44aa" emissive="#cc0088" emissiveIntensity={1.5} />
+      </mesh>
+      {/* Portal face */}
+      <mesh position={[0.1, 2.05, 0.06]} rotation={[0, 0, 0]}>
+        <circleGeometry args={[0.68, 32]} />
+        <meshStandardMaterial
+          color="#050008" emissive="#550099"
+          emissiveIntensity={near ? 2.5 : 0.6}
+          transparent opacity={0.92}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      <pointLight ref={glowRef} color="#bb44ff" intensity={2} distance={6} position={[0.5, 2.05, 0.8]} />
+      {/* Label */}
+      {near && (
+        <Html position={[0.1, 3.7, 0]} center style={{ pointerEvents: 'none' }}>
+          <div style={{
+            background: 'rgba(8,0,18,0.92)', border: '1.5px solid #aa44ff',
+            borderRadius: 10, padding: '9px 20px',
+            color: '#cc99ff', fontFamily: 'Inter, sans-serif',
+            fontSize: 13, fontWeight: 700, textAlign: 'center',
+            whiteSpace: 'nowrap', boxShadow: '0 0 20px rgba(170,68,255,0.55)',
+          }}>
+            🌀 Vuoi andare al Labirinto?<br />
+            <span style={{ fontSize: 10, color: '#bb88ff88' }}>[E] Attraversa il portale</span>
+          </div>
+        </Html>
+      )}
+    </group>
+  );
+}
+
+/* ───────────────── Player controller with WASD + collisions + proximity ───────────────── */
+const DOOR_POS   = { x: 0,              z: -ROOM.d / 2 };
+const PORTAL_POS = { x: -ROOM.w / 2,   z: -1.5 };
+const TRIGGER_DIST = 2.2;
+
+function Player({ controlsRef, chestOpen, onNearChange, onGoToVillage, onGoToMaze }) {
   const { camera } = useThree();
-  const velocity = useRef(new THREE.Vector3());
-  const keys = useRef({});
+  const keys    = useRef({});
+  const nearRef = useRef({ door: false, portal: false });
 
   useEffect(() => {
-    camera.position.set(0, 1.6, 0);
+    camera.position.set(0, 1.6, 3.0);
     const onDown = (e) => { if (!chestOpen) keys.current[e.code] = true; };
-    const onUp = (e) => { keys.current[e.code] = false; };
+    const onUp   = (e) => { keys.current[e.code] = false; };
     window.addEventListener('keydown', onDown);
-    window.addEventListener('keyup', onUp);
+    window.addEventListener('keyup',   onUp);
     return () => { window.removeEventListener('keydown', onDown); window.removeEventListener('keyup', onUp); };
   }, [camera, chestOpen]);
+
+  // [E] key → trigger portal/door
+  useEffect(() => {
+    const onE = (e) => {
+      if (e.code !== 'KeyE' || chestOpen) return;
+      if (nearRef.current.door)   onGoToVillage?.();
+      if (nearRef.current.portal) onGoToMaze?.();
+    };
+    window.addEventListener('keydown', onE);
+    return () => window.removeEventListener('keydown', onE);
+  }, [chestOpen, onGoToVillage, onGoToMaze]);
 
   useFrame((_, delta) => {
     if (chestOpen || !controlsRef.current?.isLocked) return;
@@ -317,20 +451,27 @@ function Player({ controlsRef, chestOpen }) {
     front.y = 0; front.normalize();
     const right = new THREE.Vector3().crossVectors(front, new THREE.Vector3(0, 1, 0)).normalize();
 
-    if (k['KeyW'] || k['ArrowUp']) dir.add(front);
-    if (k['KeyS'] || k['ArrowDown']) dir.sub(front);
-    if (k['KeyA'] || k['ArrowLeft']) dir.sub(right);
+    if (k['KeyW'] || k['ArrowUp'])    dir.add(front);
+    if (k['KeyS'] || k['ArrowDown'])  dir.sub(front);
+    if (k['KeyA'] || k['ArrowLeft'])  dir.sub(right);
     if (k['KeyD'] || k['ArrowRight']) dir.add(right);
     if (dir.length() > 0) dir.normalize();
 
     const newPos = camera.position.clone().add(dir.multiplyScalar(MOVE_SPEED * delta));
-    // Collisions (keep inside room with margin)
     const mx = ROOM.w / 2 - 0.4;
     const mz = ROOM.d / 2 - 0.4;
     newPos.x = Math.max(-mx, Math.min(mx, newPos.x));
     newPos.z = Math.max(-mz, Math.min(mz, newPos.z));
     newPos.y = 1.6;
     camera.position.copy(newPos);
+
+    // Proximity
+    const nearDoor   = Math.hypot(newPos.x - DOOR_POS.x,   newPos.z - DOOR_POS.z)   < TRIGGER_DIST;
+    const nearPortal = Math.hypot(newPos.x - PORTAL_POS.x, newPos.z - PORTAL_POS.z) < TRIGGER_DIST;
+    if (nearDoor !== nearRef.current.door || nearPortal !== nearRef.current.portal) {
+      nearRef.current = { door: nearDoor, portal: nearPortal };
+      onNearChange?.({ nearDoor, nearPortal });
+    }
   });
   return null;
 }
@@ -599,8 +740,15 @@ function ChestInventory({ isOpen, onClose }) {
 }
 
 /* ───────────────── Scene ───────────────── */
-function Scene({ onChestOpen, chestOpen }) {
+function Scene({ onChestOpen, chestOpen, onGoToVillage, onGoToMaze }) {
   const controlsRef = useRef();
+  const [nearDoor,   setNearDoor]   = useState(false);
+  const [nearPortal, setNearPortal] = useState(false);
+
+  const handleNearChange = useCallback(({ nearDoor, nearPortal }) => {
+    setNearDoor(nearDoor);
+    setNearPortal(nearPortal);
+  }, []);
 
   return (
     <>
@@ -623,15 +771,25 @@ function Scene({ onChestOpen, chestOpen }) {
       <Chest onOpen={onChestOpen} isOpen={chestOpen} />
       <Landscape />
 
+      {/* ── Portals ── */}
+      <VillageDoor near={nearDoor} />
+      <MazePortal  near={nearPortal} />
+
       {/* Controls */}
       {!chestOpen && <PointerLockControls ref={controlsRef} />}
-      <Player controlsRef={controlsRef} chestOpen={chestOpen} />
+      <Player
+        controlsRef={controlsRef}
+        chestOpen={chestOpen}
+        onNearChange={handleNearChange}
+        onGoToVillage={onGoToVillage}
+        onGoToMaze={onGoToMaze}
+      />
     </>
   );
 }
 
 /* ───────────────── Main export ───────────────── */
-export default function House3D({ onExit }) {
+export default function House3D({ onExit, onGoToVillage, onGoToMaze }) {
   const [chestOpen, setChestOpen] = useState(false);
   const [showChestUI, setShowChestUI] = useState(false);
   const [locked, setLocked] = useState(false);
@@ -657,7 +815,7 @@ export default function House3D({ onExit }) {
       {/* HUD */}
       <div style={{ position: 'fixed', top: 16, left: 16, zIndex: 100, color: '#D4AF37', fontFamily: 'Inter, sans-serif', fontSize: 12 }}>
         <div style={{ background: 'rgba(0,0,0,0.7)', borderRadius: 8, padding: '8px 14px', border: '1px solid #D4AF3744' }}>
-          🏠 <b>La tua Casa</b> — WASD per muoverti · Click sul forziere · ESC per uscire
+          🏠 <b>La tua Casa</b> — WASD muoviti · Click forziere · [E] portali · ESC esci
         </div>
       </div>
 
@@ -675,7 +833,7 @@ export default function House3D({ onExit }) {
 
       <Canvas shadows camera={{ fov: 60, near: 0.1, far: 500 }} style={{ width: '100%', height: '100%' }}
         onPointerDown={e => e.target.requestPointerLock?.()}>
-        <Scene onChestOpen={handleChestOpen} chestOpen={chestOpen} />
+        <Scene onChestOpen={handleChestOpen} chestOpen={chestOpen} onGoToVillage={onGoToVillage} onGoToMaze={onGoToMaze} />
       </Canvas>
     </div>
   );

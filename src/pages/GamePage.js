@@ -62,7 +62,6 @@ const ENEMY_IMAGES = {
 
 const LOCATIONS = [
   { id: 'home', name: 'La tua Casa', icon: Home, description: 'Riposati e gestisci il tuo inventario' },
-  { id: 'town', name: 'Città Centrale', icon: Crown, description: 'La capitale del regno' },
   { id: 'forest', name: 'Foresta Oscura', icon: MapPin, description: 'Piena di goblin e creature' },
   { id: 'dungeon', name: 'Dungeon Antico', icon: Skull, description: 'Pericolo alto, ricompense migliori' },
   { id: 'arena', name: 'Arena PvP', icon: Swords, description: 'Combatti altri giocatori' }
@@ -513,7 +512,7 @@ export default function GamePage() {
                   className="h-full w-full relative"
                 >
                   {isInHouse ? (
-                    <House3D onExit={() => { setIsInHouse(false); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); }} onGoToVillage={() => { setIsInHouse(false); setIsInVillage(true); }} />
+                    <House3D onExit={() => { setIsInHouse(false); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); }} onGoToVillage={() => { setIsInHouse(false); setIsInVillage(true); }} onGoToMaze={() => { setIsInHouse(false); setIsInMaze(true); }} />
                   ) : isInMaze ? (
                     <Maze3D onExit={async (results) => {
                       setIsInMaze(false);
