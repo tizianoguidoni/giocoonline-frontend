@@ -262,7 +262,13 @@ export default function GamePage() {
               {LOCATIONS.map(loc => (
                 <button
                   key={loc.id}
-                  onClick={() => { setCurrentLocation(loc); setShowLocationMenu(false); }}
+                  onClick={() => { 
+                    setCurrentLocation(loc); 
+                    setShowLocationMenu(false); 
+                    setIsInMaze(false);
+                    setIsInVillage(false);
+                    setIsInHouse(false);
+                  }}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all ${
                     currentLocation.id === loc.id ? 'bg-[#D4AF37]/20 text-[#D4AF37]' : 'text-white/70 hover:bg-white/5'
                   }`}
@@ -457,19 +463,22 @@ export default function GamePage() {
                     setIsInHouse(false);
                     setIsInMaze(false);
                     setIsInArena(false);
+                    setIsInVillage(false);
                   } else if (item.id === 'combat') {
                     setActiveTab('combat');
                     if (currentLocation.id === 'home') {
-                      setCurrentLocation(LOCATIONS[2]); // Default to Forest for combat
+                      setCurrentLocation(LOCATIONS[1]); // Default to Foresta Oscura
                     }
                     setIsInHouse(false);
                     setIsInMaze(false);
                     setIsInArena(false);
+                    setIsInVillage(false);
                   } else {
                     setActiveTab(item.id);
                     setIsInHouse(false);
                     setIsInMaze(false);
                     setIsInArena(false);
+                    setIsInVillage(false);
                   }
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
